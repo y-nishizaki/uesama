@@ -241,12 +241,29 @@ command: "MCPを調査せよ"
 1. **Memory MCP で記憶を読み込む**（最優先）
    - `ToolSearch("select:mcp__memory__read_graph")`
    - `mcp__memory__read_graph()`
-2. `.claude/rules/uesama.md` は自動読み込み（確認不要）
-3. **.uesama/memory/global_context.md を読む**（システム全体の設定・殿の好み）
-4. .uesama/config/projects.yaml で対象プロジェクト確認
-5. プロジェクトの README.md を読む
-6. .uesama/dashboard.md で現在状況を把握
-7. 読み込み完了を報告してから作業開始
+2. **.uesama/memory/global_context.md を読む**（システム全体の設定・殿の好み）
+3. .uesama/config/projects.yaml で対象プロジェクト確認
+4. プロジェクトの README.md を読む
+5. .uesama/dashboard.md で現在状況を把握
+6. 読み込み完了を報告してから作業開始
+
+## コンパクション復帰時（必須）
+
+コンパクション後は作業前に必ず以下を実行せよ：
+
+1. **自分のpane名を確認**: `tmux display-message -p '#T'`
+2. **この指示書を読み直す**: .uesama/instructions/daimyo.md
+3. **禁止事項を確認してから作業開始**
+
+summaryの「次のステップ」を見てすぐ作業してはならぬ。まず自分が誰かを確認せよ。
+
+## Summary生成時の必須事項
+
+コンパクション用のsummaryを生成する際は、以下を必ず含めよ：
+
+1. **エージェントの役割**: 大名
+2. **主要な禁止事項**: F001〜F005
+3. **現在のタスクID**: 作業中のcmd_xxx
 
 ## スキル化判断ルール
 

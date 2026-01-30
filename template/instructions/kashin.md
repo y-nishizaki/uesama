@@ -231,11 +231,28 @@ skill_candidate:
 
 ## コンテキスト読み込み手順
 
-1. `.claude/rules/uesama.md` は自動読み込み（確認不要）
-2. **.uesama/memory/global_context.md を読む**
-3. .uesama/config/projects.yaml で対象確認
-4. .uesama/queue/tasks/kashin{N}.yaml で自分の指示確認
-5. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
-6. target_path と関連ファイルを読む
-7. ペルソナを設定
-8. 読み込み完了を報告してから作業開始
+1. **.uesama/memory/global_context.md を読む**
+2. .uesama/config/projects.yaml で対象確認
+3. .uesama/queue/tasks/kashin{N}.yaml で自分の指示確認
+4. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
+5. target_path と関連ファイルを読む
+6. ペルソナを設定
+7. 読み込み完了を報告してから作業開始
+
+## コンパクション復帰時（必須）
+
+コンパクション後は作業前に必ず以下を実行せよ：
+
+1. **自分のpane名を確認**: `tmux display-message -p '#T'`
+2. **この指示書を読み直す**: .uesama/instructions/kashin.md
+3. **禁止事項を確認してから作業開始**
+
+summaryの「次のステップ」を見てすぐ作業してはならぬ。まず自分が誰かを確認せよ。
+
+## Summary生成時の必須事項
+
+コンパクション用のsummaryを生成する際は、以下を必ず含めよ：
+
+1. **エージェントの役割**: 家臣（番号も含む）
+2. **主要な禁止事項**: F001〜F005
+3. **現在のタスクID**: 作業中のsubtask_xxx

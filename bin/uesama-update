@@ -34,12 +34,10 @@ fi
 cp -r "$SRC/bin/"* "$UESAMA_HOME/bin/"
 cp -r "$SRC/scripts/"* "$UESAMA_HOME/scripts/"
 
-mkdir -p "$UESAMA_HOME/template/.uesama"
 rm -rf "$UESAMA_HOME/template/.uesama" "$UESAMA_HOME/template/.claude"
 mkdir -p "$UESAMA_HOME/template/.uesama"
-cp -r "$SRC/template/"* "$UESAMA_HOME/template/.uesama/"
-mkdir -p "$UESAMA_HOME/template/.claude/rules"
-cp "$SRC/template/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
+cp -r "$SRC/template/instructions" "$UESAMA_HOME/template/.uesama/"
+cp -r "$SRC/template/templates" "$UESAMA_HOME/template/.uesama/"
 
 # settings.yaml マージ（新キーのみ追加、既存キーは保持）
 NEW_SETTINGS="$SRC/template/config/settings.yaml"

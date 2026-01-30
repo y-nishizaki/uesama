@@ -6,7 +6,9 @@
 
 - **bash** (4.0+)
 - **tmux** — `brew install tmux` / `sudo apt install tmux`
-- **Claude Code CLI** — `npm install -g @anthropic-ai/claude-code`
+- **AI コーディングエージェント**（いずれか1つ）:
+  - Claude Code CLI — `npm install -g @anthropic-ai/claude-code`
+  - Codex CLI — `npm install -g @openai/codex`
 - **ShellCheck** — `brew install shellcheck` / `sudo apt install shellcheck`（推奨）
 
 ### 初期セットアップ
@@ -39,7 +41,7 @@ bash scripts/setup-dev.sh
 uesama/
 ├── bin/                        # CLI コマンド（uesama, uesama-daimyo, ...）
 ├── scripts/
-│   ├── start.sh                # メイン起動スクリプト（tmux + Claude Code）
+│   ├── start.sh                # メイン起動スクリプト（tmux + AI エージェント）
 │   ├── setup.sh                # ユーザー向け依存チェック
 │   └── setup-dev.sh            # 開発者向け環境セットアップ
 ├── template/
@@ -47,8 +49,7 @@ uesama/
 │   │   ├── daimyo.md           #   大名（統括）
 │   │   ├── sanbo.md            #   参謀（タスク管理）
 │   │   └── kashin.md           #   家臣（実働）
-│   ├── templates/              # dashboard.md, context.md のテンプレート
-│   └── .claude/rules/          # Claude Code のルール設定
+│   └── templates/              # dashboard.md, context.md のテンプレート
 ├── tests/
 │   ├── run_tests.sh            # ユニットテスト
 │   ├── test_tmux_integration.sh # tmux 統合テスト

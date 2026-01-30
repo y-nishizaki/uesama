@@ -2,7 +2,7 @@
 
 ## 概要
 
-uesama は tmux + Claude Code CLI でマルチエージェント協調を実現するシステムです。エージェント間の通信はすべて YAML ファイル + `tmux send-keys` によるイベント駆動で行われ、ポーリングは一切行いません。
+uesama は tmux + AI コーディングエージェント（Claude Code / Codex）でマルチエージェント協調を実現するシステムです。エージェント間の通信はすべて YAML ファイル + `tmux send-keys` によるイベント駆動で行われ、ポーリングは一切行いません。
 
 ## エージェント構成
 
@@ -57,7 +57,7 @@ uesama は tmux + Claude Code CLI でマルチエージェント協調を実現�
 ```
 .uesama/
 ├── config/
-│   └── settings.yaml           # 言語、家臣数
+│   └── settings.yaml           # 言語、家臣数、エージェント設定
 ├── queue/
 │   ├── daimyo_to_sanbo.yaml    # 大名→参謀 指示
 │   ├── sanbo_plan.yaml         # 参謀→大名 計画承認依頼
@@ -139,3 +139,27 @@ uesama
 ```yaml
 kashin_count: 4
 ```
+
+### ロール別エージェント設定
+
+大名・参謀・家臣それぞれに異なる AI エージェントを指定できます。
+
+`~/.uesama/config/settings.yaml`（またはプロジェクト `.uesama/config/settings.yaml`）:
+
+```yaml
+agent: claude              # 全ロール共通のデフォルト
+agent_daimyo: claude       # 大名のみ上書き
+agent_sanbo: codex         # 参謀のみ上書き
+agent_kashin: claude       # 家臣のみ上書き
+```
+
+環境変数でも制御可能（settings.yaml より優先）:
+
+| 環境変数 | 対象 |
+|----------|------|
+| `UESAMA_AGENT` | 全ロール共通のデフォルト |
+| `UESAMA_AGENT_DAIMYO` | 大名のみ |
+| `UESAMA_AGENT_SANBO` | 参謀のみ |
+| `UESAMA_AGENT_KASHIN` | 家臣のみ |
+
+優先順位: 環境変数 `UESAMA_AGENT_<ROLE>` > settings.yaml `agent_<role>` > `UESAMA_AGENT` > settings.yaml `agent` > デフォルト（claude）

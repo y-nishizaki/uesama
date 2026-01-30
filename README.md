@@ -2,12 +2,13 @@
 
 <div align="center">
 
-**Claude Code マルチエージェント統率システム**
+**AI コーディングエージェント マルチ統率システム**
 
 *コマンド1つで、最大11体のAIエージェントが並列稼働*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
+[![Codex](https://img.shields.io/badge/OpenAI-Codex-blue)](https://github.com/openai/codex)
 [![tmux](https://img.shields.io/badge/tmux-required-green)](https://github.com/tmux/tmux)
 
 </div>
@@ -16,7 +17,7 @@
 
 ## これは何？
 
-**uesama** は、複数の Claude Code インスタンスを戦国時代の軍制のように統率するCLIツールです。
+**uesama** は、複数の AI コーディングエージェント（Claude Code / Codex）を戦国時代の軍制のように統率するCLIツールです。
 
 一度インストールすれば、任意のプロジェクトディレクトリで使用できます。
 
@@ -47,7 +48,9 @@
 ### 必要環境
 
 - **tmux** — `brew install tmux` (macOS) / `sudo apt install tmux` (Linux)
-- **Claude Code CLI** — `npm install -g @anthropic-ai/claude-code`
+- **AI コーディングエージェント**（いずれか1つ）:
+  - Claude Code CLI — `npm install -g @anthropic-ai/claude-code`
+  - Codex CLI — `npm install -g @openai/codex`
 
 ### インストール
 
@@ -80,7 +83,7 @@ cd uesama
 
 1. `uesama` がプロジェクトに `.uesama/` ディレクトリを作成
 2. tmux セッション `kashindan` を起動（大名+参謀+家臣のペインを配置）
-3. 全エージェントで Claude Code を起動
+3. 全エージェントで AI コーディングエージェント（Claude Code or Codex）を起動
 4. エージェント間は YAML ファイル + tmux send-keys で通信（イベント駆動、ポーリングなし）
 5. 進捗は `.uesama/dashboard.md` で確認
 
@@ -95,6 +98,26 @@ cd uesama
 | 家臣 (Kashin) | 実働部隊 — タスクを並列実行 | 9（デフォルト） |
 
 家臣の数は環境変数 `UESAMA_KASHIN_COUNT` で変更できます。
+
+### エージェント設定
+
+`~/.uesama/config/settings.yaml` またはプロジェクトの `.uesama/config/settings.yaml` で設定:
+
+```yaml
+agent: claude              # 全ロール共通のデフォルト
+agent_daimyo: claude       # 大名のみ指定
+agent_sanbo: codex         # 参謀のみ指定
+agent_kashin: claude       # 家臣のみ指定
+```
+
+環境変数でも上書き可能:
+
+```bash
+UESAMA_AGENT=claude                  # 全ロール共通
+UESAMA_AGENT_DAIMYO=claude           # 大名のみ
+UESAMA_AGENT_SANBO=codex             # 参謀のみ
+UESAMA_AGENT_KASHIN=claude           # 家臣のみ
+```
 
 ### tmux レイアウト
 
