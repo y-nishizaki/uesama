@@ -161,6 +161,60 @@ UESAMA_AGENT_KASHIN=claude           # 家臣のみ
 
 [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun)（yohey-w）をベースに開発。原型は [Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication)（Akira-Papa）。
 
+## 設定リファレンス
+
+### 環境変数一覧
+
+| 環境変数 | 説明 | デフォルト |
+| -------- | ---- | ---------- |
+| `UESAMA_HOME` | インストールディレクトリ | `$HOME/.uesama` |
+| `UESAMA_KASHIN_COUNT` | 家臣（ワーカー）の数 | `9` |
+| `UESAMA_AGENT` | 全ロール共通のエージェント (`claude` / `codex`) | `claude` |
+| `UESAMA_AGENT_DAIMYO` | 大名のエージェント | `UESAMA_AGENT` に従う |
+| `UESAMA_AGENT_SANBO` | 参謀のエージェント | `UESAMA_AGENT` に従う |
+| `UESAMA_AGENT_KASHIN` | 家臣のエージェント | `UESAMA_AGENT` に従う |
+| `UESAMA_ADMIN_BYPASS` | 承認フローをスキップ | `false` |
+
+### 設定ファイル
+
+`settings.yaml` は以下の順で読み込まれます（上が優先）:
+
+1. プロジェクト: `.uesama/config/settings.yaml`
+2. ユーザー: `~/.uesama/config/settings.yaml`
+
+環境変数は設定ファイルより優先されます。
+
+---
+
+## トラブルシューティング
+
+### tmux セッションが残ってしまった
+
+```bash
+uesama-stop                          # 通常の停止
+tmux kill-session -t kashindan       # 手動で強制終了
+```
+
+### `uesama-session` で「セッションが見つかりません」と表示される
+
+`uesama` で先にエージェントを起動してください。
+
+### エージェントが応答しない・フリーズした
+
+1. `uesama-session` でセッションに接続し、該当ペインを確認
+2. 必要なら `uesama-stop` で全体を停止し、再度 `uesama` で起動
+
+### ログの確認
+
+各セッションのログは `.uesama/logs/<タイムスタンプ>/` に保存されます。
+
+```bash
+ls .uesama/logs/                     # セッション一覧
+cat .uesama/logs/latest/sanbo.log    # 参謀のログを確認
+```
+
+---
+
 ## ⚠️ 利用上の注意
 
 uesama は複数のAIエージェントを**許可確認なしの自動実行モード**（`--dangerously-skip-permissions`等）で起動します。これにより以下のリスクがあります。
