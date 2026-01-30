@@ -30,8 +30,7 @@ echo ""
 echo "  [必須ファイル]"
 for f in \
     bin/uesama \
-    bin/uesama-daimyo \
-    bin/uesama-agents \
+    bin/uesama-session \
     bin/uesama-stop \
     scripts/start.sh \
     scripts/setup.sh \
@@ -53,7 +52,7 @@ done
 # ==================================================================
 echo ""
 echo "  [実行権限]"
-for f in bin/uesama bin/uesama-daimyo bin/uesama-agents bin/uesama-stop \
+for f in bin/uesama bin/uesama-session bin/uesama-stop \
          scripts/start.sh scripts/setup.sh install.sh uninstall.sh; do
     if [ -x "$PROJECT_ROOT/$f" ]; then
         pass "$f is executable"
@@ -67,7 +66,7 @@ done
 # ==================================================================
 echo ""
 echo "  [シェバン行]"
-for f in bin/uesama bin/uesama-daimyo bin/uesama-agents bin/uesama-stop \
+for f in bin/uesama bin/uesama-session bin/uesama-stop \
          scripts/start.sh scripts/setup.sh install.sh uninstall.sh; do
     first_line=$(head -1 "$PROJECT_ROOT/$f")
     if echo "$first_line" | grep -qE '^#!/bin/(ba)?sh'; then
@@ -517,7 +516,7 @@ done
 
 # eval が無いことを確認（インジェクション防止）
 SCRIPTS_WITH_EVAL=""
-for f in bin/uesama bin/uesama-daimyo bin/uesama-agents bin/uesama-stop \
+for f in bin/uesama bin/uesama-session bin/uesama-stop \
          scripts/start.sh scripts/setup.sh install.sh uninstall.sh; do
     if grep -qE '^\s*eval ' "$PROJECT_ROOT/$f"; then
         SCRIPTS_WITH_EVAL="$SCRIPTS_WITH_EVAL $f"
