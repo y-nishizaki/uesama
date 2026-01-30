@@ -6,6 +6,7 @@ set -e
 PASS=0
 FAIL=0
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+export PROJECT_ROOT
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 pass() {

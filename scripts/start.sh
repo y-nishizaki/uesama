@@ -11,8 +11,10 @@ KASHIN_COUNT="${UESAMA_KASHIN_COUNT:-8}"
 # 言語設定を読み取り
 LANG_SETTING="ja"
 if [ -f "$PROJECT_DIR/.uesama/config/settings.yaml" ]; then
+    export LANG_SETTING
     LANG_SETTING=$(grep "^language:" "$PROJECT_DIR/.uesama/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "ja")
 elif [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
+    export LANG_SETTING
     LANG_SETTING=$(grep "^language:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "ja")
 fi
 
@@ -78,7 +80,7 @@ mkdir -p "$PROJ_UESAMA/queue/tasks" "$PROJ_UESAMA/queue/reports" \
 # テンプレートからシンボリックリンク
 for dir in instructions templates; do
     if [ ! -L "$PROJ_UESAMA/$dir" ]; then
-        rm -rf "$PROJ_UESAMA/$dir"
+        rm -rf "${PROJ_UESAMA:?}/$dir"
         ln -sf "$UESAMA_HOME/template/.uesama/$dir" "$PROJ_UESAMA/$dir"
     fi
 done
@@ -297,6 +299,7 @@ if [ "$(uname)" = "Darwin" ]; then
 
     open_terminal_with_command() {
         local cmd="$1"
+        # shellcheck disable=SC2034
         local title="$2"
         if [ -d "/Applications/iTerm.app" ]; then
             osascript -e "

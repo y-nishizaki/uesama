@@ -73,7 +73,7 @@ else
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#TMUX_OPTIONS[@]} ]; then
             idx=$((choice - 1))
             echo "    インストール中..."
-            eval "${TMUX_CMDS[$idx]}" && TMUX_INSTALL_SUCCESS=true
+            bash -c "${TMUX_CMDS[$idx]}" && TMUX_INSTALL_SUCCESS=true
         else
             echo "    スキップしました"
         fi
@@ -138,7 +138,7 @@ else
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#INSTALL_OPTIONS[@]} ]; then
             idx=$((choice - 1))
             echo "    インストール中..."
-            eval "${INSTALL_CMDS[$idx]}" && CLAUDE_INSTALL_SUCCESS=true
+            bash -c "${INSTALL_CMDS[$idx]}" && CLAUDE_INSTALL_SUCCESS=true
         else
             echo "    スキップしました"
         fi
