@@ -20,25 +20,24 @@
 
 一度インストールすれば、任意のプロジェクトディレクトリで使用できます。
 
-```mermaid
-flowchart TD
-    U["👑 あなた（上様）"]
-    U -->|命令| D
-
-    subgraph Daimyo["🏯 DAIMYO（大名）"]
-        D[命令を受け取り参謀に委譲]
-    end
-
-    D -->|YAML + send-keys| S
-
-    subgraph Sanbo["⚔️ SANBO（参謀）"]
-        S[タスクを分解し家臣に分配]
-    end
-
-    S --> K1[🗡️ 家臣1] & K2[🗡️ 家臣2] & K3[🗡️ 家臣3] & K4[🗡️ 家臣4] & K5[🗡️ 家臣5] & K6[🗡️ 家臣6] & K7[🗡️ 家臣7] & K8[🗡️ 家臣8] & K9[🗡️ 家臣9]
-
-    style Daimyo fill:#1a237e,stroke:#0d47a1,color:#fff
-    style Sanbo fill:#1b5e20,stroke:#2e7d32,color:#fff
+```
+      あなた（上様）
+           │
+           ▼ 命令を出す
+    ┌─────────────┐
+    │   DAIMYO    │  ← 命令を受け取り、即座に委譲
+    │   (大名)    │
+    └──────┬──────┘
+           │ YAMLファイル + tmux send-keys
+    ┌──────▼──────┐
+    │    SANBO    │  ← タスクを分解し家臣に分配
+    │   (参謀)    │
+    └──────┬──────┘
+           │
+  ┌─┬─┬─┬─┴─┬─┬─┬─┬─┐
+  │1│2│3│4│5│6│7│8│9│  ← 最大9体の家臣が並列実行
+  └─┴─┴─┴─┴─┴─┴─┴─┴─┘
+      KASHIN (家臣)
 ```
 
 ---
@@ -113,7 +112,15 @@ cd uesama
 
 ## ワークフロー図
 
-詳細なフロー図は [docs/workflow.md](docs/workflow.md) を参照。
+### 全体フロー
+
+<img src="docs/images/workflow-overview.svg" alt="全体ワークフロー" width="100%">
+
+### 通信プロトコル
+
+<img src="docs/images/workflow-protocol.svg" alt="通信プロトコル" width="100%">
+
+詳細は [docs/workflow.md](docs/workflow.md) を参照。
 
 ---
 
