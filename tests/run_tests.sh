@@ -213,6 +213,15 @@ else
     fail "install.sh adds PATH to .bashrc" "PATH entry not found"
 fi
 
+# ロール別エージェント設定がsettings.yamlに含まれるか
+for key in agent_daimyo agent_sanbo agent_kashin; do
+    if grep -q "^${key}:" "$FAKE_HOME/.uesama/config/settings.yaml" 2>/dev/null; then
+        pass "install.sh settings.yaml contains ${key}"
+    else
+        fail "install.sh settings.yaml contains ${key}" "key not found"
+    fi
+done
+
 if grep -q 'UESAMA_HOME' "$FAKE_HOME/.bashrc" 2>/dev/null; then
     pass "install.sh adds UESAMA_HOME to .bashrc"
 else
@@ -306,6 +315,25 @@ if command -v tmux > /dev/null 2>&1; then
     fi
 fi
 
+# setup.sh のロール別エージェント設定チェック
+if grep -q 'UESAMA_AGENT_DAIMYO' "$PROJECT_ROOT/scripts/setup.sh"; then
+    pass "setup.sh reads UESAMA_AGENT_DAIMYO env var"
+else
+    fail "setup.sh reads UESAMA_AGENT_DAIMYO env var" "env var not found"
+fi
+
+if grep -q 'REQUIRED_AGENTS' "$PROJECT_ROOT/scripts/setup.sh"; then
+    pass "setup.sh deduplicates required agents"
+else
+    fail "setup.sh deduplicates required agents" "REQUIRED_AGENTS not found"
+fi
+
+if grep -q 'check_and_install_agent' "$PROJECT_ROOT/scripts/setup.sh"; then
+    pass "setup.sh has check_and_install_agent function"
+else
+    fail "setup.sh has check_and_install_agent function" "function not found"
+fi
+
 # claude コマンドが無い環境ならエラーを返すことを確認
 SETUP_TMPDIR=$(mktemp -d)
 (
@@ -366,6 +394,87 @@ if grep -q 'LANG_SETTING\|language' "$PROJECT_ROOT/scripts/start.sh"; then
 else
     fail "start.sh handles language setting" "language handling not found"
 fi
+
+# ==================================================================
+# 11b. start.sh のロール別エージェント設定チェック
+# ==================================================================
+echo ""
+echo "  [start.sh エージェント設定]"
+
+# ヘルパー関数の存在
+if grep -q 'resolve_agent_cmd' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh has resolve_agent_cmd helper"
+else
+    fail "start.sh has resolve_agent_cmd helper" "function not found"
+fi
+
+if grep -q 'resolve_agent_display' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh has resolve_agent_display helper"
+else
+    fail "start.sh has resolve_agent_display helper" "function not found"
+fi
+
+if grep -q 'resolve_agent_ready_pattern' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh has resolve_agent_ready_pattern helper"
+else
+    fail "start.sh has resolve_agent_ready_pattern helper" "function not found"
+fi
+
+# ロール別変数の存在
+for role in DAIMYO SANBO KASHIN; do
+    if grep -q "AGENT_${role}" "$PROJECT_ROOT/scripts/start.sh"; then
+        pass "start.sh supports AGENT_${role} setting"
+    else
+        fail "start.sh supports AGENT_${role} setting" "variable not found"
+    fi
+done
+
+# 環境変数の読み取り
+for role in DAIMYO SANBO KASHIN; do
+    if grep -q "UESAMA_AGENT_${role}" "$PROJECT_ROOT/scripts/start.sh"; then
+        pass "start.sh reads UESAMA_AGENT_${role} env var"
+    else
+        fail "start.sh reads UESAMA_AGENT_${role} env var" "env var not found"
+    fi
+done
+
+# settings.yaml のロール別キー読み取り
+for role in daimyo sanbo kashin; do
+    if grep -q "agent_${role}" "$PROJECT_ROOT/scripts/start.sh"; then
+        pass "start.sh reads agent_${role} from settings"
+    else
+        fail "start.sh reads agent_${role} from settings" "key not found"
+    fi
+done
+
+# claude と codex の両方をサポート
+if grep -q 'claude.*--dangerously-skip-permissions' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh supports claude agent"
+else
+    fail "start.sh supports claude agent" "claude command not found"
+fi
+
+if grep -q 'codex.*--full-auto' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh supports codex agent"
+else
+    fail "start.sh supports codex agent" "codex command not found"
+fi
+
+# 未知エージェントのエラー処理
+if grep -q '未知のエージェント種別' "$PROJECT_ROOT/scripts/start.sh"; then
+    pass "start.sh handles unknown agent type"
+else
+    fail "start.sh handles unknown agent type" "error message not found"
+fi
+
+# ロール別コマンド変数の使用
+for role in DAIMYO SANBO KASHIN; do
+    if grep -q "${role}_CMD" "$PROJECT_ROOT/scripts/start.sh"; then
+        pass "start.sh uses ${role}_CMD for agent invocation"
+    else
+        fail "start.sh uses ${role}_CMD for agent invocation" "variable not found"
+    fi
+done
 
 # ==================================================================
 # 12. キューファイルテンプレートの構造チェック
