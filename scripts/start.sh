@@ -161,24 +161,34 @@ echo ""
 TOTAL_PANES=$((KASHIN_COUNT + 2))  # daimyo + sanbo + kashin
 log_war "⚔️ 全軍の陣を構築中（${TOTAL_PANES}名配備）..."
 
-# 1. セッション作成 → Pane 0（大名）
+# レイアウト:
+# ┌──────────┬──────────┬──────────┬──────────┐
+# │          │ kashin1  │ kashin4  │ kashin7  │
+# │  大名    ├──────────┼──────────┼──────────┤
+# │          │ kashin2  │ kashin5  │ kashin8  │
+# ├──────────┼──────────┼──────────┼──────────┤
+# │  参謀    │ kashin3  │ kashin6  │ kashin9  │
+# └──────────┴──────────┴──────────┴──────────┘
+
+# 1. セッション作成（左列全体 → 大名+参謀になる）
 tmux new-session -d -s kashindan -n "agents" -c "$PROJECT_DIR"
-DAIMYO_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+LEFT_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
 
-# 2. 上下分割: 上段30%=大名、下段70%=家臣用
-tmux split-window -v -p 70 -t "$DAIMYO_ID"
-LOWER_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+# 2. 左右分割: 左25%=大名+参謀列、右75%=家臣エリア
+tmux split-window -h -p 75 -t "$LEFT_ID"
+RIGHT_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
 
-# 3. 上段を左右分割: 左2/3=大名、右1/3=参謀
-tmux split-window -h -p 33 -t "$DAIMYO_ID"
+# 3. 左列を上下分割: 上67%=大名、下33%=参謀
+tmux split-window -v -p 33 -t "$LEFT_ID"
 SANBO_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+DAIMYO_ID="$LEFT_ID"
 
-# 4. 下段を3列に分割
-tmux split-window -h -p 67 -t "$LOWER_ID"
+# 4. 右エリアを3列に分割
+tmux split-window -h -p 67 -t "$RIGHT_ID"
 COL23_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
 tmux split-window -h -p 50 -t "$COL23_ID"
 COL3_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
-COL1_ID="$LOWER_ID"
+COL1_ID="$RIGHT_ID"
 COL2_ID="$COL23_ID"
 
 # 5. 各列を3行に分割（家臣×9）
