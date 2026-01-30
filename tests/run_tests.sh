@@ -41,7 +41,7 @@ for f in \
     template/instructions/sanbo.md \
     template/instructions/kashin.md \
     template/templates/context.md \
-    .claude/rules/uesama.md; do
+    template/.claude/rules/uesama.md; do
     if [ -f "$PROJECT_ROOT/$f" ]; then
         pass "$f exists"
     else

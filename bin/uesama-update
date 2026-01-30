@@ -39,7 +39,7 @@ rm -rf "$UESAMA_HOME/template/.uesama" "$UESAMA_HOME/template/.claude"
 mkdir -p "$UESAMA_HOME/template/.uesama"
 cp -r "$SRC/template/"* "$UESAMA_HOME/template/.uesama/"
 mkdir -p "$UESAMA_HOME/template/.claude/rules"
-cp "$SRC/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
+cp "$SRC/template/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
 
 # settings.yaml マージ（新キーのみ追加、既存キーは保持）
 NEW_SETTINGS="$SRC/template/config/settings.yaml"

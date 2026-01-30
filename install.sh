@@ -54,7 +54,7 @@ cp -r "$SCRIPT_DIR/scripts" "$UESAMA_HOME/"
 mkdir -p "$UESAMA_HOME/template/.uesama"
 cp -r "$SCRIPT_DIR/template/"* "$UESAMA_HOME/template/.uesama/"
 mkdir -p "$UESAMA_HOME/template/.claude/rules"
-cp "$SCRIPT_DIR/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
+cp "$SCRIPT_DIR/template/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
 
 # config ディレクトリ作成
 mkdir -p "$UESAMA_HOME/config"
