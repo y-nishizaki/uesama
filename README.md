@@ -148,6 +148,85 @@ UESAMA_AGENT_KASHIN=claude           # 家臣のみ
 
 ---
 
+## 使用例: 指示から完了報告までの流れ
+
+実際に上様が指示を出してから、結果が返ってくるまでの流れを示します。
+
+### 1. 上様 → 大名: 指示を出す
+
+```
+上様: "READMEにインストール手順を追加せよ"
+```
+
+大名はこの指示を YAML に変換し、参謀に委譲します。
+
+```yaml
+# .uesama/queue/daimyo_to_sanbo.yaml
+queue:
+  - id: cmd_001
+    command: "READMEにインストール手順を追加せよ"
+    priority: high
+    status: pending
+```
+
+```
+大名 → 参謀: "daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。"
+```
+
+### 2. 参謀: タスクを分解し家臣に分配
+
+参謀は指示を分析し、必要に応じてタスクを分解します。
+
+```
+参謀: "単一ファイルへの追記のため、家臣1名で十分と判断。承認不要。"
+```
+
+```yaml
+# .uesama/queue/tasks/kashin1.yaml
+task:
+  task_id: subtask_001
+  description: "README.md にインストール手順セクションを追加せよ"
+  target_path: "README.md"
+  status: assigned
+```
+
+```
+参謀 → 家臣1: "kashin1.yaml に任務がある。確認して実行せよ。"
+```
+
+### 3. 家臣: タスクを実行し報告
+
+家臣はタスクを実行し、完了後に報告書を作成します。
+
+```yaml
+# .uesama/queue/reports/kashin1_report.yaml
+worker_id: kashin1
+task_id: subtask_001
+status: done
+result:
+  summary: "README.md にインストール手順を追加完了でござる"
+  files_modified:
+    - "README.md"
+```
+
+```
+家臣1 → 参謀: "kashin1、任務完了でござる。報告書を確認されよ。"
+```
+
+### 4. 参謀 → 大名 → 上様: 完了報告
+
+参謀はダッシュボードを更新し、大名に報告。大名が上様に最終報告します。
+
+```
+参謀 → 大名: "dashboard.md を更新した。確認されたし。"
+大名 → 上様: "READMEへのインストール手順追加、完了いたしました。"
+```
+
+> **補足**: タスクが複数の家臣に分配される場合（例: 「テストを書いてドキュメントも更新せよ」）、
+> 各家臣が並列で実行し、全員の報告が揃ってから参謀が集約して報告します。
+
+---
+
 ## 主な特徴
 
 - **並列実行**: 最大9タスクを同時実行
