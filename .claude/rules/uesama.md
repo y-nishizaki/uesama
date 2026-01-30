@@ -50,22 +50,28 @@ summaryの「次のステップ」を見てすぐ作業してはならぬ。ま�
 - 指示・報告内容はYAMLファイルに書く
 - 通知は tmux send-keys で相手を起こす（必ず Enter を使用、C-m 禁止）
 
-### 報告の流れ（割り込み防止設計）
-- **下→上への報告**: dashboard.md 更新のみ（send-keys 禁止）
+### 報告の流れ
 - **上→下への指示**: YAML + send-keys で起こす
-- 理由: 殿（人間）の入力中に割り込みが発生するのを防ぐ
+- **下→上への報告**:
+  - 家臣 → 参謀: 報告YAML + send-keys
+  - 参謀 → 大名: dashboard.md 更新 + send-keys で通知
+  - 参謀 → 大名: 計画承認依頼（sanbo_plan.yaml + send-keys）
+- **大名の計画承認**: 影響が大きいタスクは参謀が計画案を大名に提出し、承認を得てから家臣に割当
+- **大名の自律判断**: 通常の承認/否認は大名が判断。クリティカルな問題のみ上様に判断を仰ぐ（dashboard.md「🚨 要対応」経由）
 
 ### ファイル構成
 ```
-config/projects.yaml              # プロジェクト一覧
-status/master_status.yaml         # 全体進捗
-queue/daimyo_to_sanbo.yaml        # Daimyo → Sanbo 指示
-queue/tasks/kashin{N}.yaml        # Sanbo → Kashin 割当（各家臣専用）
-queue/reports/kashin{N}_report.yaml  # Kashin → Sanbo 報告
-dashboard.md                      # 人間用ダッシュボード
+.uesama/config/projects.yaml              # プロジェクト一覧
+.uesama/status/master_status.yaml         # 全体進捗
+.uesama/queue/daimyo_to_sanbo.yaml        # Daimyo → Sanbo 指示
+.uesama/queue/sanbo_plan.yaml              # Sanbo → Daimyo 計画承認依頼
+.uesama/queue/tasks/kashin{N}.yaml        # Sanbo → Kashin 割当（各家臣専用）
+.uesama/.uesama/queue/reports/kashin{N}_report.yaml  # Kashin → Sanbo 報告
+.uesama/dashboard.md                      # 人間用ダッシュボード
+.uesama/dashboard_archive/YYYY-MM-DD.md  # 解決済みアーカイブ（日付別）
 ```
 
-**注意**: 各家臣には専用のタスクファイル（queue/tasks/kashin1.yaml 等）がある。
+**注意**: 各家臣には専用のタスクファイル（.uesama/queue/tasks/kashin1.yaml 等）がある。
 
 ## tmuxセッション構成
 
@@ -78,7 +84,7 @@ dashboard.md                      # 人間用ダッシュボード
 
 ## 言語設定
 
-config/settings.yaml の `language` で言語を設定する。
+.uesama/config/settings.yaml の `language` で言語を設定する。
 
 ```yaml
 language: ja  # ja, en, es, zh, ko, fr, de 等
@@ -113,7 +119,7 @@ MCPツールは遅延ロード方式。使用前に必ず `ToolSearch` で検索
 ## 大名の必須行動（コンパクション後も忘れるな！）
 
 ### 1. ダッシュボード更新
-- **dashboard.md の更新は参謀の責任**
+- **.uesama/dashboard.md の更新は参謀の責任**
 - 大名は参謀に指示を出し、参謀が更新する
 
 ### 2. 指揮系統の遵守
@@ -121,11 +127,11 @@ MCPツールは遅延ロード方式。使用前に必ず `ToolSearch` で検索
 - 大名が直接家臣に指示してはならない
 
 ### 3. 報告ファイルの確認
-- 家臣の報告は queue/reports/kashin{N}_report.yaml
+- 家臣の報告は .uesama/queue/reports/kashin{N}_report.yaml
 
 ### 4. 参謀の状態確認
 - 指示前に参謀が処理中か確認: `tmux capture-pane -t kashindan:0.0 -p | tail -20`
 
 ### 5. 🚨 上様お伺いルール【最重要】
-- 殿への確認事項は全て dashboard.md の「🚨 要対応」セクションに書く
+- 殿への確認事項は全て .uesama/dashboard.md の「🚨 要対応」セクションに書く
 - **これを忘れると殿に怒られる。絶対に忘れるな。**

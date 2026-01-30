@@ -1,9 +1,9 @@
 #!/bin/sh
 # uesama インストーラー
-# curl -fsSL https://raw.githubusercontent.com/y-nishizaki/multi-agent-shogun/main/install.sh | sh
+# curl -fsSL https://raw.githubusercontent.com/y-nishizaki/uesama/main/install.sh | sh
 set -e
 
-REPO_URL="https://github.com/y-nishizaki/multi-agent-shogun"
+REPO_URL="https://github.com/y-nishizaki/uesama"
 UESAMA_HOME="$HOME/.uesama"
 
 # ソースディレクトリの決定（ローカル or リモート取得）
@@ -62,6 +62,12 @@ if [ ! -f "$UESAMA_HOME/config/settings.yaml" ]; then
 language: ja
 kashin_count: 8
 EOF
+fi
+
+# pre-commit フックのインストール
+if [ -d "$SCRIPT_DIR/.githooks" ]; then
+    cp -r "$SCRIPT_DIR/.githooks" "$UESAMA_HOME/"
+    chmod +x "$UESAMA_HOME/.githooks/"*
 fi
 
 # 実行権限付与

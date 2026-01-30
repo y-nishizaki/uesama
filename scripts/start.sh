@@ -37,29 +37,17 @@ show_banner() {
     echo -e "\033[1;31m╚══════════════════════════════════════════════════════════╝\033[0m"
     echo ""
 
-    echo -e "\033[1;34m  ╔═══════════════════════════════════════════════════════╗\033[0m"
-    echo -e "\033[1;34m  ║\033[0m        \033[1;37m【 家 臣 団 ・ ${KASHIN_COUNT} 名 配 備 】\033[0m                   \033[1;34m║\033[0m"
-    echo -e "\033[1;34m  ╚═══════════════════════════════════════════════════════╝\033[0m"
-    echo ""
+    # 武士アスキーアート
+    local BANNER_FILE="$UESAMA_HOME/template/.uesama/templates/banner_samurai.txt"
+    if [ -f "$BANNER_FILE" ]; then
+        echo -e "\033[1;37m"
+        cat "$BANNER_FILE"
+        echo -e "\033[0m"
+    fi
 
-    # 家臣隊列
-    local flags=""
-    local poles=""
-    local bases=""
-    local feet=""
-    local labels=""
-    for i in $(seq 1 $KASHIN_COUNT); do
-        flags="$flags  /\\  "
-        poles="$poles /||\\  "
-        bases="$bases/_||\\  "
-        feet="$feet  /  \\  "
-        labels="$labels [臣$i] "
-    done
-    echo "    $flags"
-    echo "    $poles"
-    echo "    $bases"
-    echo "    $feet"
-    echo "    $labels"
+    echo -e "\033[1;36m                   ╔═══════════════════════════════╗\033[0m"
+    echo -e "\033[1;36m                   ║   家 臣 団 ・ \033[1;37m${KASHIN_COUNT}\033[1;36m 名 配 備      ║\033[0m"
+    echo -e "\033[1;36m                   ╚═══════════════════════════════╝\033[0m"
     echo ""
     echo -e "              \033[1;36m「「「 はっ！！ 出陣いたす！！ 」」」\033[0m"
     echo ""
@@ -293,13 +281,11 @@ echo "  ╔═══════════════════════
 echo "  ║  🏯 出陣準備完了！天下布武！                              ║"
 echo "  ╚══════════════════════════════════════════════════════════╝"
 echo ""
-echo "  次のステップ:"
+echo "  コマンド一覧:"
 echo "  ┌──────────────────────────────────────────────────────────┐"
-echo "  │  大名の本陣にアタッチして命令を開始:                      │"
-echo "  │     uesama-daimyo   (または: tmux attach -t daimyo)      │"
-echo "  │                                                          │"
-echo "  │  参謀・家臣の陣を確認する:                                │"
-echo "  │     uesama-agents   (または: tmux attach -t kashindan)   │"
+echo "  │  uesama-stop      全セッション停止（撤収）               │"
+echo "  │  uesama-daimyo    大名セッションに再接続                 │"
+echo "  │  uesama-agents    参謀・家臣セッションに再接続           │"
 echo "  └──────────────────────────────────────────────────────────┘"
 echo ""
 

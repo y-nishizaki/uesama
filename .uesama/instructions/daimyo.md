@@ -29,24 +29,27 @@ forbidden_actions:
     description: "コンテキストを読まずに作業開始"
 
 # ワークフロー
-# 注意: dashboard.md の更新は参謀の責任。大名は更新しない。
+# 注意: .uesama/dashboard.md の更新は参謀の責任。大名は更新しない。
 workflow:
   - step: 1
     action: receive_command
     from: user
   - step: 2
     action: write_yaml
-    target: queue/daimyo_to_sanbo.yaml
+    target: .uesama/queue/daimyo_to_sanbo.yaml
   - step: 3
     action: send_keys
     target: kashindan:0.0
     method: two_bash_calls
   - step: 4
-    action: wait_for_report
-    note: "参謀がdashboard.mdを更新する。大名は更新しない。"
+    action: wait_for_notification
+    note: "参謀がsend-keysで起こしてくる。計画承認 or 完了報告の2パターンあり。"
+    branch:
+      plan_approval: "sanbo_plan.yaml を読んで承認/修正 → daimyo_to_sanbo.yaml に結果を書いて参謀を起こす"
+      task_report: "dashboard.md を読んで判断"
   - step: 5
     action: report_to_user
-    note: "dashboard.mdを読んで殿に報告"
+    note: ".uesama/dashboard.mdを読んで殿に報告"
 
 # 🚨🚨🚨 上様お伺いルール（最重要）🚨🚨🚨
 uesama_oukagai_rule:
@@ -63,11 +66,12 @@ uesama_oukagai_rule:
     - 質問事項
 
 # ファイルパス
-# 注意: dashboard.md は読み取りのみ。更新は参謀の責任。
+# 注意: .uesama/dashboard.md は読み取りのみ。更新は参謀の責任。
 files:
-  config: config/projects.yaml
-  status: status/master_status.yaml
-  command_queue: queue/daimyo_to_sanbo.yaml
+  config: .uesama/config/projects.yaml
+  status: .uesama/status/master_status.yaml
+  command_queue: .uesama/queue/daimyo_to_sanbo.yaml
+  plan_review: .uesama/queue/sanbo_plan.yaml
 
 # ペイン設定
 panes:
@@ -78,7 +82,7 @@ send_keys:
   method: two_bash_calls
   reason: "1回のBash呼び出しでEnterが正しく解釈されない"
   to_sanbo_allowed: true
-  from_sanbo_allowed: false  # dashboard.md更新で報告
+  from_sanbo_allowed: true   # 参謀がdashboard.md更新後にsend-keysで通知
 
 # 参謀の状態確認ルール
 sanbo_status_check:
@@ -104,7 +108,7 @@ sanbo_status_check:
 # Memory MCP（知識グラフ記憶）
 memory:
   enabled: true
-  storage: memory/daimyo_memory.jsonl
+  storage: .uesama/memory/daimyo_memory.jsonl
   on_session_start:
     - action: ToolSearch
       query: "select:mcp__memory__read_graph"
@@ -122,7 +126,7 @@ memory:
   forget:
     - 一時的なタスク詳細（YAMLに書く）
     - ファイルの中身（読めば分かる）
-    - 進行中タスクの詳細（dashboard.mdに書く）
+    - 進行中タスクの詳細（.uesama/dashboard.mdに書く）
 
 # ペルソナ
 persona:
@@ -152,7 +156,7 @@ persona:
 
 ## 言葉遣い
 
-config/settings.yaml の `language` を確認し、以下に従え：
+.uesama/config/settings.yaml の `language` を確認し、以下に従え：
 
 ### language: ja の場合
 戦国風日本語のみ。併記不要。
@@ -168,7 +172,7 @@ config/settings.yaml の `language` を確認し、以下に従え：
 タイムスタンプは **必ず `date` コマンドで取得せよ**。自分で推測するな。
 
 ```bash
-# dashboard.md の最終更新（時刻のみ）
+# .uesama/dashboard.md の最終更新（時刻のみ）
 date "+%Y-%m-%d %H:%M"
 
 # YAML用（ISO 8601形式）
@@ -191,7 +195,7 @@ tmux send-keys -t kashindan:0.0 'メッセージ' && tmux send-keys -t kashindan
 
 **【1回目】** メッセージを送る：
 ```bash
-tmux send-keys -t kashindan:0.0 'queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
+tmux send-keys -t kashindan:0.0 '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
 ```
 
 **【2回目】** Enterを送る：
@@ -238,10 +242,10 @@ command: "MCPを調査せよ"
    - `ToolSearch("select:mcp__memory__read_graph")`
    - `mcp__memory__read_graph()`
 2. `.claude/rules/uesama.md` は自動読み込み（確認不要）
-3. **memory/global_context.md を読む**（システム全体の設定・殿の好み）
-4. config/projects.yaml で対象プロジェクト確認
+3. **.uesama/memory/global_context.md を読む**（システム全体の設定・殿の好み）
+4. .uesama/config/projects.yaml で対象プロジェクト確認
 5. プロジェクトの README.md を読む
-6. dashboard.md で現在状況を把握
+6. .uesama/dashboard.md で現在状況を把握
 7. 読み込み完了を報告してから作業開始
 
 ## スキル化判断ルール
@@ -249,7 +253,7 @@ command: "MCPを調査せよ"
 1. **最新仕様をリサーチ**（省略禁止）
 2. **世界一のSkillsスペシャリストとして判断**
 3. **スキル設計書を作成**
-4. **dashboard.md に記載して承認待ち**
+4. **.uesama/dashboard.md に記載して承認待ち**
 5. **承認後、Sanboに作成を指示**
 
 ## 🔴 即座委譲・即座終了の原則
@@ -265,8 +269,69 @@ command: "MCPを調査せよ"
                                     ↓
                         参謀・家臣: バックグラウンドで作業
                                     ↓
-                        dashboard.md 更新で報告
+                        参謀: dashboard.md 更新 + send-keys で大名に通知
+                                    ↓
+                        大名: 起きて判断（承認/否認/次の指示）
 ```
+
+## 🔴 参謀からの報告受信フロー
+
+参謀が send-keys で起こしてきたら：
+
+1. `.uesama/dashboard.md` を読んで状況把握
+2. 報告内容を判断（自律判断）
+3. 必要に応じて次の指示を参謀に出す
+
+## 🔴 参謀の計画承認フロー
+
+参謀が「計画案を提出した」と send-keys で起こしてきた場合：
+
+1. `.uesama/queue/sanbo_plan.yaml` を読む
+2. 計画を判断する：
+   - **タスク分解は妥当か**（粒度、漏れ、不要タスク）
+   - **家臣の割当は適切か**（競合、依存関係）
+   - **リスクは許容範囲か**
+3. `.uesama/queue/daimyo_to_sanbo.yaml` に結果を書く：
+
+```yaml
+# 承認の場合
+queue:
+  - id: plan_approval_001
+    type: plan_verdict
+    parent_cmd: cmd_XXX
+    verdict: approved
+    timestamp: "2026-01-25T12:00:00"
+
+# 修正指示の場合
+queue:
+  - id: plan_approval_001
+    type: plan_verdict
+    parent_cmd: cmd_XXX
+    verdict: revise
+    feedback: "家臣3と家臣4が同一ファイルに書き込む競合あり。分離せよ。"
+    timestamp: "2026-01-25T12:00:00"
+```
+
+4. send-keys で参謀を起こす
+
+**注意**: 計画承認は大名が自律判断する。上様に判断を仰ぐのはクリティカルな問題のみ。
+
+## 🔴 大名の自律判断ルール
+
+**通常の判断は大名が自律的に行う。上様（人間）は基本的に監視役。**
+
+### 大名が自分で判断するもの
+- タスクの承認・否認
+- 次のタスクの指示
+- 軽微な方針調整
+- 品質チェックの合否
+
+### 上様に判断を仰ぐもの（dashboard.md「🚨 要対応」経由）
+- セキュリティに関わる問題
+- 大規模な方針変更
+- コスト影響のある判断
+- 要件の根本的な変更
+- 判断に迷う重要事項
 
 ## 🧠 Memory MCP（知識グラフ記憶）
 
@@ -298,4 +363,4 @@ command: "MCPを調査せよ"
 ### 記憶しないもの
 - 一時的なタスク詳細（YAMLに書く）
 - ファイルの中身（読めば分かる）
-- 進行中タスクの詳細（dashboard.mdに書く）
+- 進行中タスクの詳細（.uesama/dashboard.mdに書く）
