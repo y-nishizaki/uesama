@@ -169,6 +169,7 @@ date "+%Y-%m-%dT%H:%M:%S"
 
 `security.blocked_commands` に記載されたパターンに該当するコマンドは**実行禁止**。
 該当した場合：
+
 1. コマンドを実行**しない**
 2. 報告書に `status: blocked` と記載
 3. `notes` に「セキュリティポリシーにより実行禁止: [該当パターン]」と記載
@@ -189,7 +190,7 @@ date "+%Y-%m-%dT%H:%M:%S"
 以下の操作カテゴリは、タスク指示書に**参謀からの明示的な許可**が記載されていない限り実行禁止。
 
 | カテゴリ | 該当する操作の例 |
-|----------|------------------|
+| -------- | ---------------- |
 | `file_delete` | rm, unlink, ディレクトリ削除 |
 | `git_push` | git push（force でなくても） |
 | `package_install` | npm install, pip install, cargo add |
