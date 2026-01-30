@@ -7,8 +7,9 @@ REPO_URL="https://github.com/y-nishizaki/uesama"
 UESAMA_HOME="$HOME/.uesama"
 
 # ソースディレクトリの決定（ローカル or リモート取得）
-# パイプ経由（curl | sh）でない場合のみローカル判定
-if [ -t 0 ] && [ -d "$(dirname "$0")/bin" ] && [ -d "$(dirname "$0")/template" ]; then
+# ローカル実行判定: ソースディレクトリが揃っていればローカル
+# (パイプ経由 curl | sh の場合は $0 が "sh" や "bash" になるため自動的にリモート取得)
+if [ -d "$(dirname "$0")/bin" ] && [ -d "$(dirname "$0")/template" ]; then
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
     CLEANUP=""
 else
