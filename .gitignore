@@ -13,3 +13,21 @@ skills/
 # Temporary files
 *.tmp
 *.bak
+
+# Demo/analysis outputs (generated during tasks)
+demo_output/
+
+# Runtime data (generated during operation)
+output/
+queue/research/
+queue/tasks/
+queue/reports/
+
+# Memory MCP data (local to each installation)
+memory/
+queue/*.yaml
+dashboard.md
+config/projects.yaml
+status/
+config/settings.yaml
+logs/

@@ -1,5 +1,5 @@
-worker_id: null
+worker_id: kashin{{N}}
 task_id: null
-timestamp: null
+timestamp: ""
 status: idle
 result: null
