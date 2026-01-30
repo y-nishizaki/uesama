@@ -40,8 +40,7 @@ for f in \
     template/instructions/daimyo.md \
     template/instructions/sanbo.md \
     template/instructions/kashin.md \
-    template/templates/context.md \
-    template/.claude/rules/uesama.md; do
+    template/templates/context.md; do
     if [ -f "$PROJECT_ROOT/$f" ]; then
         pass "$f exists"
     else

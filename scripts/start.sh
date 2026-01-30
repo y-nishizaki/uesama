@@ -116,42 +116,6 @@ for dir in instructions templates; do
     fi
 done
 
-# エージェントルールの配置
-if [ "$AGENT_TYPE" = "codex" ]; then
-    # Codex: UESAMA.md をfallbackファイルとして配置（既存 AGENTS.md を壊さない）
-    if [ ! -L "$PROJECT_DIR/UESAMA.md" ]; then
-        rm -f "$PROJECT_DIR/UESAMA.md"
-        ln -sf "$UESAMA_HOME/template/.claude/rules/uesama.md" "$PROJECT_DIR/UESAMA.md"
-    fi
-    # ~/.codex/config.toml に fallback 設定を追加
-    CODEX_CONFIG_DIR="$HOME/.codex"
-    CODEX_CONFIG="$CODEX_CONFIG_DIR/config.toml"
-    mkdir -p "$CODEX_CONFIG_DIR"
-    if [ ! -f "$CODEX_CONFIG" ]; then
-        cat > "$CODEX_CONFIG" << 'TOML'
-project_doc_fallback_filenames = ["UESAMA.md"]
-TOML
-        log_info "  └─ ~/.codex/config.toml を作成（UESAMA.md fallback設定）"
-    elif ! grep -q 'UESAMA.md' "$CODEX_CONFIG" 2>/dev/null; then
-        # 既存の fallback 設定があるか確認
-        if grep -q 'project_doc_fallback_filenames' "$CODEX_CONFIG" 2>/dev/null; then
-            # 既存リストに UESAMA.md を追加
-            sed -i 's/project_doc_fallback_filenames *= *\[/project_doc_fallback_filenames = ["UESAMA.md", /' "$CODEX_CONFIG"
-        else
-            echo '' >> "$CODEX_CONFIG"
-            echo 'project_doc_fallback_filenames = ["UESAMA.md"]' >> "$CODEX_CONFIG"
-        fi
-        log_info "  └─ ~/.codex/config.toml に UESAMA.md fallback設定を追加"
-    fi
-else
-    # Claude Code: .claude/rules/ にルールをシンボリックリンク
-    mkdir -p "$PROJECT_DIR/.claude/rules"
-    if [ ! -L "$PROJECT_DIR/.claude/rules/uesama.md" ]; then
-        rm -f "$PROJECT_DIR/.claude/rules/uesama.md"
-        ln -sf "$UESAMA_HOME/template/.claude/rules/uesama.md" "$PROJECT_DIR/.claude/rules/uesama.md"
-    fi
-fi
-
 # .gitignore に .uesama/ 追加
 if [ -f "$PROJECT_DIR/.gitignore" ]; then
     if ! grep -q "^\.uesama/" "$PROJECT_DIR/.gitignore" 2>/dev/null; then

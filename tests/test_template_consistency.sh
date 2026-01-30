@@ -53,22 +53,7 @@ for f in "$PROJECT_ROOT"/template/templates/*; do
 done
 
 # ==================================================================
-# 3. template/.claude/rules/ 内の全ファイルが template/ 配下に存在するか
-# ==================================================================
-echo ""
-echo "  [.claude/rules ファイル]"
-for f in "$PROJECT_ROOT"/template/.claude/rules/*; do
-    [ -f "$f" ] || continue
-    name=$(basename "$f")
-    if [ -f "$PROJECT_ROOT/template/.claude/rules/$name" ]; then
-        pass "template/.claude/rules/$name exists"
-    else
-        fail "template/.claude/rules/$name exists" "file not found"
-    fi
-done
-
-# ==================================================================
-# 4. dashboard.md テンプレートの必須セクション
+# 3. dashboard.md テンプレートの必須セクション
 # ==================================================================
 echo ""
 echo "  [dashboard.md 必須セクション]"

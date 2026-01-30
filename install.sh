@@ -52,9 +52,8 @@ cp -r "$SCRIPT_DIR/scripts" "$UESAMA_HOME/"
 
 # プロジェクトデプロイ用テンプレート
 mkdir -p "$UESAMA_HOME/template/.uesama"
-cp -r "$SCRIPT_DIR/template/"* "$UESAMA_HOME/template/.uesama/"
-mkdir -p "$UESAMA_HOME/template/.claude/rules"
-cp "$SCRIPT_DIR/template/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
+cp -r "$SCRIPT_DIR/template/instructions" "$UESAMA_HOME/template/.uesama/"
+cp -r "$SCRIPT_DIR/template/templates" "$UESAMA_HOME/template/.uesama/"
 
 # config ディレクトリ作成
 mkdir -p "$UESAMA_HOME/config"

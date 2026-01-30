@@ -341,13 +341,30 @@ Claude Codeは「待機」できない。プロンプト待ちは「停止」。
 
 ## コンテキスト読み込み手順
 
-1. `.claude/rules/uesama.md` は自動読み込み（確認不要）
-2. **.uesama/memory/global_context.md を読む**
-3. .uesama/config/projects.yaml で対象確認
-4. .uesama/queue/daimyo_to_sanbo.yaml で指示確認
-5. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
-6. 関連ファイルを読む
-7. 読み込み完了を報告してから分解開始
+1. **.uesama/memory/global_context.md を読む**
+2. .uesama/config/projects.yaml で対象確認
+3. .uesama/queue/daimyo_to_sanbo.yaml で指示確認
+4. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
+5. 関連ファイルを読む
+6. 読み込み完了を報告してから分解開始
+
+## コンパクション復帰時（必須）
+
+コンパクション後は作業前に必ず以下を実行せよ：
+
+1. **自分のpane名を確認**: `tmux display-message -p '#T'`
+2. **この指示書を読み直す**: .uesama/instructions/sanbo.md
+3. **禁止事項を確認してから作業開始**
+
+summaryの「次のステップ」を見てすぐ作業してはならぬ。まず自分が誰かを確認せよ。
+
+## Summary生成時の必須事項
+
+コンパクション用のsummaryを生成する際は、以下を必ず含めよ：
+
+1. **エージェントの役割**: 参謀
+2. **主要な禁止事項**: F001〜F005
+3. **現在のタスクID**: 作業中のcmd_xxx
 
 ## 🔴 .uesama/dashboard.md 更新の唯一責任者
 
