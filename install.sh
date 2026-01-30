@@ -62,6 +62,9 @@ if [ ! -f "$UESAMA_HOME/config/settings.yaml" ]; then
 language: ja
 kashin_count: 8
 agent: claude
+agent_daimyo: claude
+agent_sanbo: claude
+agent_kashin: claude
 EOF
 fi
 

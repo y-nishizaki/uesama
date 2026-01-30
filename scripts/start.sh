@@ -18,36 +18,84 @@ elif [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
     LANG_SETTING=$(grep "^language:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "ja")
 fi
 
-# エージェント設定を読み取り（claude or codex）
-AGENT_TYPE="${UESAMA_AGENT:-}"
-if [ -z "$AGENT_TYPE" ]; then
+# エージェント設定読み取りヘルパー
+# 設定ファイルから指定キーの値を取得する
+read_setting() {
+    local key="$1"
+    local val=""
     if [ -f "$PROJECT_DIR/.uesama/config/settings.yaml" ]; then
-        AGENT_TYPE=$(grep "^agent:" "$PROJECT_DIR/.uesama/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
+        val=$(grep "^${key}:" "$PROJECT_DIR/.uesama/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
     fi
-    if [ -z "$AGENT_TYPE" ] && [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
-        AGENT_TYPE=$(grep "^agent:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
+    if [ -z "$val" ] && [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
+        val=$(grep "^${key}:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
     fi
-    AGENT_TYPE="${AGENT_TYPE:-claude}"
-fi
+    echo "$val"
+}
 
-# エージェント起動コマンドの決定
-case "$AGENT_TYPE" in
-    claude)
-        AGENT_CMD="claude --dangerously-skip-permissions"
-        AGENT_DISPLAY_NAME="Claude Code"
-        AGENT_READY_PATTERN="bypass permissions"
-        ;;
-    codex)
-        AGENT_CMD="codex --full-auto"
-        AGENT_DISPLAY_NAME="Codex"
-        AGENT_READY_PATTERN='\$'
-        ;;
-    *)
-        echo "エラー: 未知のエージェント種別: $AGENT_TYPE"
-        echo "  対応エージェント: claude, codex"
-        exit 1
-        ;;
-esac
+# エージェント種別からコマンド情報を返すヘルパー
+resolve_agent_cmd() {
+    local agent_type="$1"
+    case "$agent_type" in
+        claude)
+            echo "claude --dangerously-skip-permissions"
+            ;;
+        codex)
+            echo "codex --full-auto"
+            ;;
+        *)
+            echo "エラー: 未知のエージェント種別: $agent_type" >&2
+            echo "  対応エージェント: claude, codex" >&2
+            exit 1
+            ;;
+    esac
+}
+
+resolve_agent_display() {
+    case "$1" in
+        claude) echo "Claude Code" ;;
+        codex)  echo "Codex" ;;
+    esac
+}
+
+resolve_agent_ready_pattern() {
+    case "$1" in
+        claude) echo "bypass permissions" ;;
+        codex)  echo '\$' ;;
+    esac
+}
+
+# デフォルトエージェント（全ロール共通のフォールバック）
+DEFAULT_AGENT="${UESAMA_AGENT:-$(read_setting agent)}"
+DEFAULT_AGENT="${DEFAULT_AGENT:-claude}"
+
+# ロール別エージェント設定
+# 優先順: 環境変数 > settings.yaml の agent_<role> > デフォルト
+AGENT_DAIMYO="${UESAMA_AGENT_DAIMYO:-$(read_setting agent_daimyo)}"
+AGENT_DAIMYO="${AGENT_DAIMYO:-$DEFAULT_AGENT}"
+
+AGENT_SANBO="${UESAMA_AGENT_SANBO:-$(read_setting agent_sanbo)}"
+AGENT_SANBO="${AGENT_SANBO:-$DEFAULT_AGENT}"
+
+AGENT_KASHIN="${UESAMA_AGENT_KASHIN:-$(read_setting agent_kashin)}"
+AGENT_KASHIN="${AGENT_KASHIN:-$DEFAULT_AGENT}"
+
+# 各ロールのコマンドを解決
+DAIMYO_CMD=$(resolve_agent_cmd "$AGENT_DAIMYO")
+SANBO_CMD=$(resolve_agent_cmd "$AGENT_SANBO")
+KASHIN_CMD=$(resolve_agent_cmd "$AGENT_KASHIN")
+
+DAIMYO_DISPLAY=$(resolve_agent_display "$AGENT_DAIMYO")
+SANBO_DISPLAY=$(resolve_agent_display "$AGENT_SANBO")
+KASHIN_DISPLAY=$(resolve_agent_display "$AGENT_KASHIN")
+
+DAIMYO_READY_PATTERN=$(resolve_agent_ready_pattern "$AGENT_DAIMYO")
+
+# 表示用のエージェント名（全部同じならシンプルに、違うなら列挙）
+if [ "$AGENT_DAIMYO" = "$AGENT_SANBO" ] && [ "$AGENT_SANBO" = "$AGENT_KASHIN" ]; then
+    AGENT_DISPLAY_SUMMARY="$DAIMYO_DISPLAY"
+else
+    AGENT_DISPLAY_SUMMARY="大名:${DAIMYO_DISPLAY} / 参謀:${SANBO_DISPLAY} / 家臣:${KASHIN_DISPLAY}"
+fi
 
 # 色付きログ関数
 log_info() { echo -e "\033[1;33m【報】\033[0m $1"; }
@@ -90,7 +138,7 @@ show_banner
 
 echo -e "  \033[1;33m天下布武！陣立てを開始いたす\033[0m"
 echo "  プロジェクト: $PROJECT_DIR"
-echo "  エージェント: $AGENT_DISPLAY_NAME"
+echo "  エージェント: $AGENT_DISPLAY_SUMMARY"
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -174,7 +222,10 @@ if [ ! -f "$PROJ_UESAMA/config/settings.yaml" ]; then
     cat > "$PROJ_UESAMA/config/settings.yaml" << EOF
 language: ja
 kashin_count: $KASHIN_COUNT
-agent: $AGENT_TYPE
+agent: $DEFAULT_AGENT
+agent_daimyo: $AGENT_DAIMYO
+agent_sanbo: $AGENT_SANBO
+agent_kashin: $AGENT_KASHIN
 EOF
 fi
 
@@ -252,27 +303,27 @@ echo ""
 # ═══════════════════════════════════════════════
 # STEP 7: エージェント起動（Claude Code / Codex）
 # ═══════════════════════════════════════════════
-log_war "👑 全軍に ${AGENT_DISPLAY_NAME} を召喚中..."
+log_war "👑 全軍にエージェントを召喚中..."
 
 # 大名
-tmux send-keys -t "$DAIMYO_ID" "$AGENT_CMD"
+tmux send-keys -t "$DAIMYO_ID" "$DAIMYO_CMD"
 tmux send-keys -t "$DAIMYO_ID" Enter
-log_info "  └─ 大名、召喚完了"
+log_info "  └─ 大名（${DAIMYO_DISPLAY}）、召喚完了"
 
 sleep 1
 
 # 参謀
-tmux send-keys -t "$SANBO_ID" "$AGENT_CMD"
+tmux send-keys -t "$SANBO_ID" "$SANBO_CMD"
 tmux send-keys -t "$SANBO_ID" Enter
 
 # 家臣
 for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
-    tmux send-keys -t "${KASHIN_IDS[$i]}" "$AGENT_CMD"
+    tmux send-keys -t "${KASHIN_IDS[$i]}" "$KASHIN_CMD"
     tmux send-keys -t "${KASHIN_IDS[$i]}" Enter
 done
-log_info "  └─ 参謀・家臣、召喚完了"
+log_info "  └─ 参謀（${SANBO_DISPLAY}）・家臣（${KASHIN_DISPLAY}）、召喚完了"
 
-log_success "✅ 全軍 ${AGENT_DISPLAY_NAME} 起動完了"
+log_success "✅ 全軍エージェント起動完了"
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -280,10 +331,10 @@ echo ""
 # ═══════════════════════════════════════════════
 log_war "📜 各エージェントに指示書を読み込ませ中..."
 
-echo "  ${AGENT_DISPLAY_NAME} の起動を待機中（最大30秒）..."
+echo "  ${DAIMYO_DISPLAY} の起動を待機中（最大30秒）..."
 for i in {1..30}; do
-    if tmux capture-pane -t "$DAIMYO_ID" -p | grep -q "$AGENT_READY_PATTERN"; then
-        echo "  └─ 大名の ${AGENT_DISPLAY_NAME} 起動確認完了（${i}秒）"
+    if tmux capture-pane -t "$DAIMYO_ID" -p | grep -q "$DAIMYO_READY_PATTERN"; then
+        echo "  └─ 大名の ${DAIMYO_DISPLAY} 起動確認完了（${i}秒）"
         break
     fi
     sleep 1
