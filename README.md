@@ -2,9 +2,11 @@
 
 <div align="center">
 
+<!-- markdownlint-disable MD036 -->
 **AI コーディングエージェント マルチ統率システム**
 
 *コマンド1つで、最大11体のAIエージェントが並列稼働*
+<!-- markdownlint-enable MD036 -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
@@ -21,7 +23,7 @@
 
 一度インストールすれば、任意のプロジェクトディレクトリで使用できます。
 
-```
+```text
       あなた（上様）
            │
            ▼ 命令を出す
@@ -91,7 +93,7 @@ cd uesama
 ## アーキテクチャ
 
 | エージェント | 役割 | 数 |
-|-------------|------|-----|
+| ----------- | ---- | --- |
 | 大名 (Daimyo) | 総大将 — あなたの命令を受け、参謀に委譲 | 1 |
 | 参謀 (Sanbo) | 軍師 — タスクを分解し、家臣に割り当て | 1 |
 | 家臣 (Kashin) | 実働部隊 — タスクを並列実行 | 9（デフォルト） |
@@ -120,7 +122,7 @@ UESAMA_AGENT_KASHIN=claude           # 家臣のみ
 
 ### tmux レイアウト
 
-```
+```text
 ┌──────────┬──────────┬──────────┬──────────┐
 │          │ kashin1  │ kashin4  │ kashin7  │
 │  大名    ├──────────┼──────────┼──────────┤

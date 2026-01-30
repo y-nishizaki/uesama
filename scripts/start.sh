@@ -154,7 +154,8 @@ log_info "プロジェクト陣地を構築中..."
 
 PROJ_UESAMA="$PROJECT_DIR/.uesama"
 mkdir -p "$PROJ_UESAMA/queue/tasks" "$PROJ_UESAMA/queue/reports" \
-         "$PROJ_UESAMA/status" "$PROJ_UESAMA/config" "$PROJ_UESAMA/memory"
+         "$PROJ_UESAMA/status" "$PROJ_UESAMA/config" "$PROJ_UESAMA/memory" \
+         "$PROJ_UESAMA/logs"
 
 # テンプレートからシンボリックリンク
 for dir in instructions templates; do
@@ -226,6 +227,52 @@ agent: $DEFAULT_AGENT
 agent_daimyo: $AGENT_DAIMYO
 agent_sanbo: $AGENT_SANBO
 agent_kashin: $AGENT_KASHIN
+
+# ═══════════════════════════════════════════════
+# セキュリティポリシー（エンタープライズ向け）
+# ═══════════════════════════════════════════════
+security:
+  # 家臣が実行を禁止されるコマンドパターン
+  # マッチした場合、家臣は status: blocked で参謀に報告する義務がある
+  blocked_commands:
+    - "rm -rf /"
+    - "git push --force"
+    - "git push -f"
+    - "git reset --hard"
+    - "chmod 777"
+    - "DROP TABLE"
+    - "DROP DATABASE"
+    - "TRUNCATE"
+
+  # 読み書き禁止のファイルパターン（glob形式）
+  # 家臣はこれらのファイルにアクセスしてはならない
+  protected_paths:
+    - ".env"
+    - ".env.*"
+    - "**/*.pem"
+    - "**/*.key"
+    - "**/credentials*"
+    - "**/secrets*"
+    - "**/.aws/*"
+    - "**/.ssh/*"
+
+  # 書き込み許可スコープ（設定時、この範囲外への書き込みを禁止）
+  # 空またはコメントアウトで制限なし
+  # writable_scope:
+  #   - "src/**"
+  #   - "docs/**"
+  #   - "tests/**"
+  #   - "package.json"
+  #   - "tsconfig.json"
+
+  # 家臣が参謀の承認なしに実行できない操作カテゴリ
+  requires_approval:
+    - "file_delete"        # ファイル・ディレクトリの削除
+    - "git_push"           # git push（通常pushも含む）
+    - "package_install"    # npm install, pip install 等
+    - "external_request"   # curl, wget 等の外部通信
+    - "config_change"      # 設定ファイルの変更
+    - "schema_change"      # DBスキーマ変更
 EOF
 fi
 
@@ -324,6 +371,38 @@ done
 log_info "  └─ 参謀（${SANBO_DISPLAY}）・家臣（${KASHIN_DISPLAY}）、召喚完了"
 
 log_success "✅ 全軍エージェント起動完了"
+echo ""
+
+# ═══════════════════════════════════════════════
+# STEP 7.5: 監査ログ設定（tmux pipe-pane）
+# ═══════════════════════════════════════════════
+log_info "📝 監査ログを設定中..."
+
+AUDIT_DATE=$(date "+%Y-%m-%d_%H%M%S")
+AUDIT_DIR="$PROJ_UESAMA/logs/$AUDIT_DATE"
+mkdir -p "$AUDIT_DIR"
+
+# 大名
+tmux pipe-pane -t "$DAIMYO_ID" -o "cat >> '${AUDIT_DIR}/daimyo.log'"
+# 参謀
+tmux pipe-pane -t "$SANBO_ID" -o "cat >> '${AUDIT_DIR}/sanbo.log'"
+# 家臣
+for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+    num=$((i + 1))
+    tmux pipe-pane -t "${KASHIN_IDS[$i]}" -o "cat >> '${AUDIT_DIR}/kashin${num}.log'"
+done
+
+# セッション情報を記録
+cat > "${AUDIT_DIR}/session_info.yaml" << EOF
+session_start: "$(date "+%Y-%m-%dT%H:%M:%S")"
+project: "$PROJECT_DIR"
+agent_daimyo: "$AGENT_DAIMYO"
+agent_sanbo: "$AGENT_SANBO"
+agent_kashin: "$AGENT_KASHIN"
+kashin_count: $KASHIN_COUNT
+EOF
+
+log_success "  └─ 監査ログ: .uesama/logs/$AUDIT_DATE/"
 echo ""
 
 # ═══════════════════════════════════════════════

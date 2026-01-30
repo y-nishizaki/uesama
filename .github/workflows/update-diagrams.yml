@@ -2,7 +2,7 @@ name: Update Diagram Images
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "docs/workflow.md"
 
@@ -37,12 +37,10 @@ jobs:
             fi
 
             echo "Generating ${output}..."
-            echo "$mermaid_code" | curl -sf -o "$output" \
+            if ! echo "$mermaid_code" | curl -sf -o "$output" \
               -X POST "https://kroki.io/mermaid/svg" \
               -H "Content-Type: text/plain" \
-              -d @-
-
-            if [ $? -ne 0 ]; then
+              -d @-; then
               echo "Error: Failed to generate ${output}"
               exit 1
             fi

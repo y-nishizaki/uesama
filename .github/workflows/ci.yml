@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   shellcheck:
@@ -67,3 +67,49 @@ jobs:
         run: |
           chmod +x tests/test_tmux_integration.sh
           bash tests/test_tmux_integration.sh
+
+  template-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run template consistency tests
+        run: |
+          chmod +x tests/test_template_consistency.sh
+          bash tests/test_template_consistency.sh
+
+  yamllint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint .github/workflows/*.yml .github/dependabot.yml
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown files
+        run: npx markdownlint-cli2 "**/*.md"
+
+  security-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
