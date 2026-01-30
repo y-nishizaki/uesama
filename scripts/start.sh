@@ -40,7 +40,7 @@ show_banner() {
     echo ""
 
     # 武士アスキーアート
-    local BANNER_FILE="$UESAMA_HOME/template/.uesama/templates/banner_samurai.txt"
+    local BANNER_FILE="$UESAMA_HOME/scripts/banner_samurai.txt"
     if [ -f "$BANNER_FILE" ]; then
         echo -e "\033[1;37m"
         cat "$BANNER_FILE"
