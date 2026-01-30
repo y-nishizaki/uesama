@@ -21,3 +21,4 @@ test-project/
 
 # uesama multi-agent system
 .uesama/
+.claude/
