@@ -62,6 +62,7 @@ if [ ! -f "$UESAMA_HOME/config/settings.yaml" ]; then
     cat > "$UESAMA_HOME/config/settings.yaml" << 'EOF'
 language: ja
 kashin_count: 8
+agent: claude
 EOF
 fi
 

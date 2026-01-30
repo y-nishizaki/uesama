@@ -1,11 +1,12 @@
 # uesama システム構成
 
-> **Version**: 2.0.0
-> **Last Updated**: 2026-01-29
+> **Version**: 2.1.0
+> **Last Updated**: 2026-01-30
 
 ## 概要
-uesamaは、Claude Code + tmux を使ったマルチエージェント並列開発基盤である。
+uesamaは、AIコーディングエージェント（Claude Code / Codex）+ tmux を使ったマルチエージェント並列開発基盤である。
 戦国時代の軍制をモチーフとした階層構造で、複数のプロジェクトを並行管理できる。
+使用するエージェントは `.uesama/config/settings.yaml` の `agent` 設定（claude / codex）で切り替え可能。
 
 ## コンパクション復帰時（全エージェント必須）
 

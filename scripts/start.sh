@@ -1,6 +1,6 @@
 #!/bin/bash
 # uesama 起動スクリプト
-# tmux セッション作成 & Claude Code 起動
+# tmux セッション作成 & エージェント（Claude Code / Codex）起動
 set -e
 
 UESAMA_HOME="${UESAMA_HOME:-$HOME/.uesama}"
@@ -17,6 +17,37 @@ elif [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
     export LANG_SETTING
     LANG_SETTING=$(grep "^language:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "ja")
 fi
+
+# エージェント設定を読み取り（claude or codex）
+AGENT_TYPE="${UESAMA_AGENT:-}"
+if [ -z "$AGENT_TYPE" ]; then
+    if [ -f "$PROJECT_DIR/.uesama/config/settings.yaml" ]; then
+        AGENT_TYPE=$(grep "^agent:" "$PROJECT_DIR/.uesama/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
+    fi
+    if [ -z "$AGENT_TYPE" ] && [ -f "$UESAMA_HOME/config/settings.yaml" ]; then
+        AGENT_TYPE=$(grep "^agent:" "$UESAMA_HOME/config/settings.yaml" 2>/dev/null | awk '{print $2}' || echo "")
+    fi
+    AGENT_TYPE="${AGENT_TYPE:-claude}"
+fi
+
+# エージェント起動コマンドの決定
+case "$AGENT_TYPE" in
+    claude)
+        AGENT_CMD="claude --dangerously-skip-permissions"
+        AGENT_DISPLAY_NAME="Claude Code"
+        AGENT_READY_PATTERN="bypass permissions"
+        ;;
+    codex)
+        AGENT_CMD="codex --full-auto"
+        AGENT_DISPLAY_NAME="Codex"
+        AGENT_READY_PATTERN='\$'
+        ;;
+    *)
+        echo "エラー: 未知のエージェント種別: $AGENT_TYPE"
+        echo "  対応エージェント: claude, codex"
+        exit 1
+        ;;
+esac
 
 # 色付きログ関数
 log_info() { echo -e "\033[1;33m【報】\033[0m $1"; }
@@ -59,6 +90,7 @@ show_banner
 
 echo -e "  \033[1;33m天下布武！陣立てを開始いたす\033[0m"
 echo "  プロジェクト: $PROJECT_DIR"
+echo "  エージェント: $AGENT_DISPLAY_NAME"
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -149,6 +181,7 @@ if [ ! -f "$PROJ_UESAMA/config/settings.yaml" ]; then
     cat > "$PROJ_UESAMA/config/settings.yaml" << EOF
 language: ja
 kashin_count: $KASHIN_COUNT
+agent: $AGENT_TYPE
 EOF
 fi
 
@@ -224,29 +257,29 @@ log_success "  └─ 全軍の陣、構築完了"
 echo ""
 
 # ═══════════════════════════════════════════════
-# STEP 7: Claude Code 起動
+# STEP 7: エージェント起動（Claude Code / Codex）
 # ═══════════════════════════════════════════════
-log_war "👑 全軍に Claude Code を召喚中..."
+log_war "👑 全軍に ${AGENT_DISPLAY_NAME} を召喚中..."
 
 # 大名
-tmux send-keys -t "$DAIMYO_ID" "claude --dangerously-skip-permissions"
+tmux send-keys -t "$DAIMYO_ID" "$AGENT_CMD"
 tmux send-keys -t "$DAIMYO_ID" Enter
 log_info "  └─ 大名、召喚完了"
 
 sleep 1
 
 # 参謀
-tmux send-keys -t "$SANBO_ID" "claude --dangerously-skip-permissions"
+tmux send-keys -t "$SANBO_ID" "$AGENT_CMD"
 tmux send-keys -t "$SANBO_ID" Enter
 
 # 家臣
 for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
-    tmux send-keys -t "${KASHIN_IDS[$i]}" "claude --dangerously-skip-permissions"
+    tmux send-keys -t "${KASHIN_IDS[$i]}" "$AGENT_CMD"
     tmux send-keys -t "${KASHIN_IDS[$i]}" Enter
 done
 log_info "  └─ 参謀・家臣、召喚完了"
 
-log_success "✅ 全軍 Claude Code 起動完了"
+log_success "✅ 全軍 ${AGENT_DISPLAY_NAME} 起動完了"
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -254,10 +287,10 @@ echo ""
 # ═══════════════════════════════════════════════
 log_war "📜 各エージェントに指示書を読み込ませ中..."
 
-echo "  Claude Code の起動を待機中（最大30秒）..."
+echo "  ${AGENT_DISPLAY_NAME} の起動を待機中（最大30秒）..."
 for i in {1..30}; do
-    if tmux capture-pane -t "$DAIMYO_ID" -p | grep -q "bypass permissions"; then
-        echo "  └─ 大名の Claude Code 起動確認完了（${i}秒）"
+    if tmux capture-pane -t "$DAIMYO_ID" -p | grep -q "$AGENT_READY_PATTERN"; then
+        echo "  └─ 大名の ${AGENT_DISPLAY_NAME} 起動確認完了（${i}秒）"
         break
     fi
     sleep 1
