@@ -37,7 +37,7 @@ bash scripts/setup-dev.sh
 
 ## プロジェクト構成
 
-```
+```text
 uesama/
 ├── bin/                        # CLI コマンド（uesama, uesama-session, ...）
 ├── scripts/
@@ -102,7 +102,7 @@ fi
 
 GitHub Flow を採用しています。
 
-```
+```text
 main ← develop ← feature/xxx
 ```
 
@@ -114,7 +114,7 @@ main ← develop ← feature/xxx
 ### ブランチ命名規則
 
 | 種類 | 命名 | 例 |
-|------|------|----|
+| ---- | ---- | -- |
 | 機能追加 | `feature/xxx` | `feature/add-health-check` |
 | バグ修正 | `fix/xxx` | `fix/yaml-parse-error` |
 | リファクタ | `refactor/xxx` | `refactor/queue-system` |
@@ -125,7 +125,7 @@ main ← develop ← feature/xxx
 ## CI/CD
 
 | ワークフロー | トリガー | 内容 |
-|-------------|---------|------|
+| ----------- | ------- | ---- |
 | `ci.yml` | push/PR to main | ShellCheck, actionlint, テスト |
 | `ci-yaml-validate.yml` | push/PR to main | YAML lint |
 | `ci-markdown-lint.yml` | push/PR to main | Markdown lint |
