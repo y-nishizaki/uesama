@@ -307,7 +307,7 @@ if [ "$(uname)" = "Darwin" ]; then
                     activate
                     set newWindow to (create window with default profile)
                     tell current session of newWindow
-                        write text \"$cmd\"
+                        write text \"exec $cmd\"
                     end tell
                 end tell
             " 2>/dev/null
@@ -315,7 +315,7 @@ if [ "$(uname)" = "Darwin" ]; then
             osascript -e "
                 tell application \"Terminal\"
                     activate
-                    do script \"$cmd\"
+                    do script \"exec $cmd\"
                 end tell
             " 2>/dev/null
         fi
