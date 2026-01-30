@@ -116,11 +116,20 @@ for dir in instructions templates; do
     fi
 done
 
-# .claude/rules/ に uesama ルールをシンボリックリンク
-mkdir -p "$PROJECT_DIR/.claude/rules"
-if [ ! -L "$PROJECT_DIR/.claude/rules/uesama.md" ]; then
-    rm -f "$PROJECT_DIR/.claude/rules/uesama.md"
-    ln -sf "$UESAMA_HOME/template/.claude/rules/uesama.md" "$PROJECT_DIR/.claude/rules/uesama.md"
+# エージェントルールの配置
+if [ "$AGENT_TYPE" = "codex" ]; then
+    # Codex: AGENTS.md にルールを配置（既存内容の末尾に追記ではなくシンボリックリンク）
+    if [ ! -L "$PROJECT_DIR/AGENTS.md" ]; then
+        rm -f "$PROJECT_DIR/AGENTS.md"
+        ln -sf "$UESAMA_HOME/template/.claude/rules/uesama.md" "$PROJECT_DIR/AGENTS.md"
+    fi
+else
+    # Claude Code: .claude/rules/ にルールをシンボリックリンク
+    mkdir -p "$PROJECT_DIR/.claude/rules"
+    if [ ! -L "$PROJECT_DIR/.claude/rules/uesama.md" ]; then
+        rm -f "$PROJECT_DIR/.claude/rules/uesama.md"
+        ln -sf "$UESAMA_HOME/template/.claude/rules/uesama.md" "$PROJECT_DIR/.claude/rules/uesama.md"
+    fi
 fi
 
 # .gitignore に .uesama/ 追加
