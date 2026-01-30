@@ -2,9 +2,11 @@
 
 <div align="center">
 
+<!-- markdownlint-disable MD036 -->
 **AI コーディングエージェント マルチ統率システム**
 
 *コマンド1つで、最大11体のAIエージェントが並列稼働*
+<!-- markdownlint-enable MD036 -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
