@@ -1,0 +1,17 @@
+name: "CI - Markdown Lint"
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown files
+        run: npx markdownlint-cli2 "**/*.md"

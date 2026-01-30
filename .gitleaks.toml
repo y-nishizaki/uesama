@@ -1,0 +1,7 @@
+title = "uesama gitleaks config"
+
+[allowlist]
+paths = [
+  '''^\.uesama/queue/''',
+  '''^tests/''',
+]
