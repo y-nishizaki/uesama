@@ -6,7 +6,7 @@ set -e
 UESAMA_HOME="${UESAMA_HOME:-$HOME/.uesama}"
 PROJECT_DIR="${1:-.}"
 PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
-KASHIN_COUNT="${UESAMA_KASHIN_COUNT:-8}"
+KASHIN_COUNT="${UESAMA_KASHIN_COUNT:-9}"
 
 # 言語設定を読み取り
 LANG_SETTING="ja"
@@ -66,7 +66,6 @@ echo ""
 # ═══════════════════════════════════════════════
 log_info "既存の陣を撤収中..."
 tmux kill-session -t kashindan 2>/dev/null && log_info "  └─ kashindan陣、撤収完了" || true
-tmux kill-session -t daimyo 2>/dev/null && log_info "  └─ daimyo本陣、撤収完了" || true
 
 # ═══════════════════════════════════════════════
 # STEP 2: プロジェクトディレクトリに .uesama/ 初期化
@@ -157,61 +156,61 @@ log_success "  └─ 初期化完了"
 echo ""
 
 # ═══════════════════════════════════════════════
-# STEP 5: kashindanセッション作成（参謀 + 家臣×N）
+# STEP 5: kashindanセッション作成（大名 + 参謀 + 家臣×N）
 # ═══════════════════════════════════════════════
-TOTAL_PANES=$((KASHIN_COUNT + 1))  # sanbo + kashin
-log_war "⚔️ 参謀・家臣の陣を構築中（${TOTAL_PANES}名配備）..."
+TOTAL_PANES=$((KASHIN_COUNT + 2))  # daimyo + sanbo + kashin
+log_war "⚔️ 全軍の陣を構築中（${TOTAL_PANES}名配備）..."
 
+# 1. セッション作成 → Pane 0（大名）
 tmux new-session -d -s kashindan -n "agents" -c "$PROJECT_DIR"
+DAIMYO_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
 
-# ペインを分割（3列 × N行で KASHIN_COUNT+1 ペインを作成）
-COLS=3
-ROWS=$(( (TOTAL_PANES + COLS - 1) / COLS ))
+# 2. 上下分割: 上段30%=大名、下段70%=家臣用
+tmux split-window -v -p 70 -t "$DAIMYO_ID"
+LOWER_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
 
-# まず列を作る
-for ((c=1; c<COLS && c<TOTAL_PANES; c++)); do
-    tmux split-window -h -t "kashindan:0"
+# 3. 上段を左右分割: 左2/3=大名、右1/3=参謀
+tmux split-window -h -p 33 -t "$DAIMYO_ID"
+SANBO_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+
+# 4. 下段を3列に分割
+tmux split-window -h -p 67 -t "$LOWER_ID"
+COL23_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+tmux split-window -h -p 50 -t "$COL23_ID"
+COL3_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+COL1_ID="$LOWER_ID"
+COL2_ID="$COL23_ID"
+
+# 5. 各列を3行に分割（家臣×9）
+KASHIN_IDS=()
+for COL_ID in "$COL1_ID" "$COL2_ID" "$COL3_ID"; do
+    KASHIN_IDS+=("$COL_ID")
+    tmux split-window -v -p 67 -t "$COL_ID"
+    MID_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+    KASHIN_IDS+=("$MID_ID")
+    tmux split-window -v -p 50 -t "$MID_ID"
+    BOT_ID=$(tmux display-message -t "kashindan:0" -p '#{pane_id}')
+    KASHIN_IDS+=("$BOT_ID")
 done
 
-# 各列を行に分割
-for ((c=0; c<COLS && c<TOTAL_PANES; c++)); do
-    panes_in_col=$ROWS
-    # 最後の列は余りがある場合少ないかも
-    remaining=$((TOTAL_PANES - c * ROWS))
-    if [ $remaining -lt $ROWS ]; then
-        panes_in_col=$remaining
-    fi
-    if [ $panes_in_col -le 0 ]; then
-        break
-    fi
+# ペインタイトル・PS1設定
+# 大名
+tmux select-pane -t "$DAIMYO_ID" -T "daimyo"
+tmux send-keys -t "$DAIMYO_ID" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;35m\]大名\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter
 
-    base_pane=$((c * ROWS))
-    tmux select-pane -t "kashindan:0.$base_pane" 2>/dev/null || true
-    for ((r=1; r<panes_in_col; r++)); do
-        tmux split-window -v -t "kashindan:0" 2>/dev/null || true
-    done
+# 参謀
+tmux select-pane -t "$SANBO_ID" -T "sanbo"
+tmux send-keys -t "$SANBO_ID" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;31m\]sanbo\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter
+
+# 家臣1-9
+for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+    kid="${KASHIN_IDS[$i]}"
+    num=$((i + 1))
+    tmux select-pane -t "$kid" -T "kashin$num" 2>/dev/null || true
+    tmux send-keys -t "$kid" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;34m\]kashin$num\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter 2>/dev/null || true
 done
 
-# ペインタイトル設定
-tmux select-pane -t "kashindan:0.0" -T "sanbo"
-tmux send-keys -t "kashindan:0.0" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;31m\]sanbo\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter
-
-for ((i=1; i<=KASHIN_COUNT; i++)); do
-    tmux select-pane -t "kashindan:0.$i" -T "kashin$i" 2>/dev/null || true
-    tmux send-keys -t "kashindan:0.$i" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;34m\]kashin$i\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter 2>/dev/null || true
-done
-
-log_success "  └─ 参謀・家臣の陣、構築完了"
-echo ""
-
-# ═══════════════════════════════════════════════
-# STEP 6: daimyoセッション作成（1ペイン）
-# ═══════════════════════════════════════════════
-log_war "👑 大名の本陣を構築中..."
-tmux new-session -d -s daimyo -c "$PROJECT_DIR"
-tmux send-keys -t daimyo "cd '$PROJECT_DIR' && export PS1='(\[\033[1;35m\]大名\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter
-
-log_success "  └─ 大名の本陣、構築完了"
+log_success "  └─ 全軍の陣、構築完了"
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -220,16 +219,20 @@ echo ""
 log_war "👑 全軍に Claude Code を召喚中..."
 
 # 大名
-tmux send-keys -t daimyo "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
-tmux send-keys -t daimyo Enter
+tmux send-keys -t "$DAIMYO_ID" "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
+tmux send-keys -t "$DAIMYO_ID" Enter
 log_info "  └─ 大名、召喚完了"
 
 sleep 1
 
-# 参謀 + 家臣
-for ((i=0; i<=KASHIN_COUNT; i++)); do
-    tmux send-keys -t "kashindan:0.$i" "claude --dangerously-skip-permissions"
-    tmux send-keys -t "kashindan:0.$i" Enter
+# 参謀
+tmux send-keys -t "$SANBO_ID" "claude --dangerously-skip-permissions"
+tmux send-keys -t "$SANBO_ID" Enter
+
+# 家臣
+for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+    tmux send-keys -t "${KASHIN_IDS[$i]}" "claude --dangerously-skip-permissions"
+    tmux send-keys -t "${KASHIN_IDS[$i]}" Enter
 done
 log_info "  └─ 参謀・家臣、召喚完了"
 
@@ -243,7 +246,7 @@ log_war "📜 各エージェントに指示書を読み込ませ中..."
 
 echo "  Claude Code の起動を待機中（最大30秒）..."
 for i in {1..30}; do
-    if tmux capture-pane -t daimyo -p | grep -q "bypass permissions"; then
+    if tmux capture-pane -t "$DAIMYO_ID" -p | grep -q "bypass permissions"; then
         echo "  └─ 大名の Claude Code 起動確認完了（${i}秒）"
         break
     fi
@@ -252,24 +255,25 @@ done
 
 # 大名に指示書
 log_info "  └─ 大名に指示書を伝達中..."
-tmux send-keys -t daimyo ".uesama/instructions/daimyo.md を読んで役割を理解せよ。"
+tmux send-keys -t "$DAIMYO_ID" ".uesama/instructions/daimyo.md を読んで役割を理解せよ。"
 sleep 0.5
-tmux send-keys -t daimyo Enter
+tmux send-keys -t "$DAIMYO_ID" Enter
 
 # 参謀に指示書
 sleep 2
 log_info "  └─ 参謀に指示書を伝達中..."
-tmux send-keys -t "kashindan:0.0" ".uesama/instructions/sanbo.md を読んで役割を理解せよ。"
+tmux send-keys -t "$SANBO_ID" ".uesama/instructions/sanbo.md を読んで役割を理解せよ。"
 sleep 0.5
-tmux send-keys -t "kashindan:0.0" Enter
+tmux send-keys -t "$SANBO_ID" Enter
 
 # 家臣に指示書
 sleep 2
 log_info "  └─ 家臣に指示書を伝達中..."
-for ((i=1; i<=KASHIN_COUNT; i++)); do
-    tmux send-keys -t "kashindan:0.$i" ".uesama/instructions/kashin.md を読んで役割を理解せよ。汝は家臣${i}号である。"
+for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+    num=$((i + 1))
+    tmux send-keys -t "${KASHIN_IDS[$i]}" ".uesama/instructions/kashin.md を読んで役割を理解せよ。汝は家臣${num}号である。"
     sleep 0.3
-    tmux send-keys -t "kashindan:0.$i" Enter
+    tmux send-keys -t "${KASHIN_IDS[$i]}" Enter
     sleep 0.5
 done
 
@@ -286,8 +290,7 @@ echo ""
 echo "  コマンド一覧:"
 echo "  ┌──────────────────────────────────────────────────────────┐"
 echo "  │  uesama-stop      全セッション停止（撤収）               │"
-echo "  │  uesama-daimyo    大名セッションに再接続                 │"
-echo "  │  uesama-agents    参謀・家臣セッションに再接続           │"
+echo "  │  uesama-daimyo    セッションに再接続                     │"
 echo "  └──────────────────────────────────────────────────────────┘"
 echo ""
 
@@ -321,8 +324,6 @@ if [ "$(uname)" = "Darwin" ]; then
         fi
     }
 
-    open_terminal_with_command "tmux attach -t daimyo" "daimyo"
-    sleep 0.5
     open_terminal_with_command "tmux attach -t kashindan" "kashindan"
 
     log_success "  └─ ターミナルウィンドウ起動完了"
