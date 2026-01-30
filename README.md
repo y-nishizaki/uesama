@@ -99,6 +99,26 @@ cd uesama
 
 家臣の数は環境変数 `UESAMA_KASHIN_COUNT` で変更できます。
 
+### エージェント設定
+
+`~/.uesama/config/settings.yaml` またはプロジェクトの `.uesama/config/settings.yaml` で設定:
+
+```yaml
+agent: claude              # 全ロール共通のデフォルト
+agent_daimyo: claude       # 大名のみ指定
+agent_sanbo: codex         # 参謀のみ指定
+agent_kashin: claude       # 家臣のみ指定
+```
+
+環境変数でも上書き可能:
+
+```bash
+UESAMA_AGENT=claude                  # 全ロール共通
+UESAMA_AGENT_DAIMYO=claude           # 大名のみ
+UESAMA_AGENT_SANBO=codex             # 参謀のみ
+UESAMA_AGENT_KASHIN=claude           # 家臣のみ
+```
+
 ### tmux レイアウト
 
 ```
