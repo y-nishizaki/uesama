@@ -158,7 +158,7 @@ flowchart LR
         A4[品質チェックの合否]
     end
 
-    subgraph "上様に判断を仰ぐ（🚨 要対応）"
+    subgraph Escalation["上様に判断を仰ぐ（要対応）"]
         B1[セキュリティ問題]
         B2[大規模な方針変更]
         B3[コスト影響のある判断]
@@ -167,7 +167,7 @@ flowchart LR
     end
 
     大名が自律判断 -->|通常| 処理続行
-    "上様に判断を仰ぐ（🚨 要対応）" -->|"dashboard.md 経由"| 上様の判断待ち
+    Escalation -->|dashboard.md 経由| 上様の判断待ち
 ```
 
 ## ファイル構成
