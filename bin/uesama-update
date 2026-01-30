@@ -34,14 +34,15 @@ fi
 cp -r "$SRC/bin/"* "$UESAMA_HOME/bin/"
 cp -r "$SRC/scripts/"* "$UESAMA_HOME/scripts/"
 
-mkdir -p "$UESAMA_HOME/template"
+mkdir -p "$UESAMA_HOME/template/.uesama"
 rm -rf "$UESAMA_HOME/template/.uesama" "$UESAMA_HOME/template/.claude"
-cp -r "$SRC/.uesama" "$UESAMA_HOME/template/"
+mkdir -p "$UESAMA_HOME/template/.uesama"
+cp -r "$SRC/template/"* "$UESAMA_HOME/template/.uesama/"
 mkdir -p "$UESAMA_HOME/template/.claude/rules"
 cp "$SRC/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
 
 # settings.yaml マージ（新キーのみ追加、既存キーは保持）
-NEW_SETTINGS="$SRC/.uesama/config/settings.yaml"
+NEW_SETTINGS="$SRC/template/config/settings.yaml"
 USER_SETTINGS="$UESAMA_HOME/config/settings.yaml"
 if [ -f "$NEW_SETTINGS" ] && [ -f "$USER_SETTINGS" ]; then
     # 新しい設定ファイルの各行について、ユーザー設定に存在しないキーのみ追加

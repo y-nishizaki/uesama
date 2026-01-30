@@ -37,10 +37,10 @@ for f in \
     scripts/setup.sh \
     install.sh \
     uninstall.sh \
-    .uesama/instructions/daimyo.md \
-    .uesama/instructions/sanbo.md \
-    .uesama/instructions/kashin.md \
-    .uesama/templates/context.md \
+    template/instructions/daimyo.md \
+    template/instructions/sanbo.md \
+    template/instructions/kashin.md \
+    template/templates/context.md \
     .claude/rules/uesama.md; do
     if [ -f "$PROJECT_ROOT/$f" ]; then
         pass "$f exists"
@@ -129,19 +129,19 @@ fi
 # ==================================================================
 echo ""
 echo "  [テンプレート]"
-if grep -q 'DAIMYO\|daimyo\|大名' "$PROJECT_ROOT/.uesama/instructions/daimyo.md"; then
+if grep -q 'DAIMYO\|daimyo\|大名' "$PROJECT_ROOT/template/instructions/daimyo.md"; then
     pass "daimyo.md contains daimyo instructions"
 else
     fail "daimyo.md contains daimyo instructions" "content mismatch"
 fi
 
-if grep -q 'SANBO\|sanbo\|参謀' "$PROJECT_ROOT/.uesama/instructions/sanbo.md"; then
+if grep -q 'SANBO\|sanbo\|参謀' "$PROJECT_ROOT/template/instructions/sanbo.md"; then
     pass "sanbo.md contains sanbo instructions"
 else
     fail "sanbo.md contains sanbo instructions" "content mismatch"
 fi
 
-if grep -q 'kashin\|家臣' "$PROJECT_ROOT/.uesama/instructions/kashin.md"; then
+if grep -q 'kashin\|家臣' "$PROJECT_ROOT/template/instructions/kashin.md"; then
     pass "kashin.md contains kashin instructions"
 else
     fail "kashin.md contains kashin instructions" "content mismatch"

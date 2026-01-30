@@ -8,7 +8,7 @@ UESAMA_HOME="$HOME/.uesama"
 
 # ソースディレクトリの決定（ローカル or リモート取得）
 # パイプ経由（curl | sh）でない場合のみローカル判定
-if [ -t 0 ] && [ -d "$(dirname "$0")/bin" ] && [ -d "$(dirname "$0")/.uesama" ]; then
+if [ -t 0 ] && [ -d "$(dirname "$0")/bin" ] && [ -d "$(dirname "$0")/template" ]; then
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
     CLEANUP=""
 else
@@ -51,8 +51,8 @@ cp -r "$SCRIPT_DIR/bin" "$UESAMA_HOME/"
 cp -r "$SCRIPT_DIR/scripts" "$UESAMA_HOME/"
 
 # プロジェクトデプロイ用テンプレート
-mkdir -p "$UESAMA_HOME/template"
-cp -r "$SCRIPT_DIR/.uesama" "$UESAMA_HOME/template/"
+mkdir -p "$UESAMA_HOME/template/.uesama"
+cp -r "$SCRIPT_DIR/template/"* "$UESAMA_HOME/template/.uesama/"
 mkdir -p "$UESAMA_HOME/template/.claude/rules"
 cp "$SCRIPT_DIR/.claude/rules/uesama.md" "$UESAMA_HOME/template/.claude/rules/uesama.md"
 
