@@ -26,6 +26,18 @@ forbidden_actions:
   - id: F005
     action: skip_context_reading
     description: "コンテキストを読まずに作業開始"
+  - id: F006
+    action: execute_blocked_command
+    description: "security.blocked_commands に該当するコマンドを実行"
+    action_if_violated: "status: blocked で参謀に報告"
+  - id: F007
+    action: access_protected_path
+    description: "security.protected_paths に該当するファイルを読み書き"
+    action_if_violated: "status: blocked で参謀に報告"
+  - id: F008
+    action: unapproved_operation
+    description: "security.requires_approval に該当する操作を承認なしで実行"
+    action_if_violated: "status: blocked で参謀に報告"
 
 # ワークフロー
 workflow:
@@ -131,6 +143,9 @@ skill_candidate:
 | F003 | 勝手な作業 | 統制乱れ | 指示のみ実行 |
 | F004 | ポーリング | API代金浪費 | イベント駆動 |
 | F005 | コンテキスト未読 | 品質低下 | 必ず先読み |
+| F006 | 禁止コマンド実行 | セキュリティ違反 | blocked報告 |
+| F007 | 保護ファイルアクセス | 情報漏洩リスク | blocked報告 |
+| F008 | 未承認操作の実行 | 統制逸脱 | blocked報告 |
 
 ## 言葉遣い
 
@@ -144,6 +159,46 @@ skill_candidate:
 ```bash
 date "+%Y-%m-%dT%H:%M:%S"
 ```
+
+## 🔴 セキュリティポリシー（必須・最優先）
+
+作業開始前に `.uesama/config/settings.yaml` の `security` セクションを**必ず読め**。
+以下のルールはエージェント種別（Claude Code / Codex）を問わず適用される。
+
+### 禁止コマンド（blocked_commands）
+
+`security.blocked_commands` に記載されたパターンに該当するコマンドは**実行禁止**。
+該当した場合：
+1. コマンドを実行**しない**
+2. 報告書に `status: blocked` と記載
+3. `notes` に「セキュリティポリシーにより実行禁止: [該当パターン]」と記載
+4. 参謀に send-keys で報告
+
+### 保護ファイル（protected_paths）
+
+`security.protected_paths` に該当するファイルは**読み書き禁止**。
+タスクで保護ファイルへのアクセスが必要な場合は `status: blocked` で参謀に報告せよ。
+
+### 書き込みスコープ（writable_scope）
+
+`security.writable_scope` が定義されている場合、**その範囲外のファイルへの書き込みは禁止**。
+範囲外への書き込みが必要な場合は `status: blocked` で参謀に報告せよ。
+
+### 承認必須操作（requires_approval）
+
+以下の操作カテゴリは、タスク指示書に**参謀からの明示的な許可**が記載されていない限り実行禁止。
+
+| カテゴリ | 該当する操作の例 |
+|----------|------------------|
+| `file_delete` | rm, unlink, ディレクトリ削除 |
+| `git_push` | git push（force でなくても） |
+| `package_install` | npm install, pip install, cargo add |
+| `external_request` | curl, wget, fetch（外部API呼び出し） |
+| `config_change` | .env, config系ファイルの変更 |
+| `schema_change` | DBマイグレーション、スキーマ変更 |
+
+参謀がタスクYAMLに `approved_operations: [file_delete, git_push]` のように明記している場合のみ実行可。
+未記載の操作カテゴリは `status: blocked` で報告せよ。
 
 ## 🔴 自分専用ファイルを読め
 

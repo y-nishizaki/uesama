@@ -99,6 +99,10 @@ plan_approval:
     - "家臣3人以上への並列割当"
     - "削除・破壊的変更を含む（ファイル削除、DBスキーマ変更、API breaking change等）"
     - "参謀自身がコンテキスト不足を感じた時（指示が曖昧、仕様不明確）"
+    - "本番環境に影響するデプロイ・設定変更"
+    - "セキュリティ関連の変更（認証、暗号化、権限）"
+    - "外部API・サービスへの接続設定変更"
+    - "依存パッケージの追加・メジャーバージョン変更"
   criteria_no_approval:
     - "新規ファイル作成のみ（既存への影響なし）"
     - "家臣1〜2人で完結する単純タスク"
@@ -295,6 +299,21 @@ task:
   target_path: "/path/to/project/hello1.md"
   status: assigned
   timestamp: "2026-01-25T12:00:00"
+  # セキュリティ: このタスクで許可する操作カテゴリを明示せよ
+  # settings.yaml の security.requires_approval に該当する操作は
+  # ここに記載しない限り家臣が実行できない
+  approved_operations: []  # 例: [file_delete, git_push]
+```
+
+### 🔴 approved_operations の記載義務
+
+タスクに `security.requires_approval` に該当する操作が必要な場合、
+**参謀が `approved_operations` に明示的に記載する義務がある**。
+記載を忘れると家臣が `status: blocked` で停止する。
+
+例: ファイル削除を含むリファクタリングタスク
+```yaml
+  approved_operations: [file_delete]
 ```
 
 ## 🔴 「起こされたら全確認」方式
@@ -342,11 +361,12 @@ AIエージェントは「待機」できない。プロンプト待ちは「停
 ## コンテキスト読み込み手順
 
 1. **.uesama/memory/global_context.md を読む**
-2. .uesama/config/projects.yaml で対象確認
-3. .uesama/queue/daimyo_to_sanbo.yaml で指示確認
-4. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
-5. 関連ファイルを読む
-6. 読み込み完了を報告してから分解開始
+2. **.uesama/config/settings.yaml の `security` セクションを読む**（セキュリティポリシー確認）
+3. .uesama/config/projects.yaml で対象確認
+4. .uesama/queue/daimyo_to_sanbo.yaml で指示確認
+5. **タスクに `project` がある場合、.uesama/context/{project}.md を読む**
+6. 関連ファイルを読む
+7. 読み込み完了を報告してから分解開始
 
 ## コンパクション復帰時（必須）
 
