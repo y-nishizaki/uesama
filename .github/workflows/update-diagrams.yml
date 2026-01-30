@@ -2,7 +2,7 @@ name: Update Diagram Images
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "docs/workflow.md"
 
