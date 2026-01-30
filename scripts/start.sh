@@ -204,8 +204,8 @@ for COL_ID in "$COL1_ID" "$COL2_ID" "$COL3_ID"; do
 done
 
 # ペインタイトル・PS1設定
-# 大名
-tmux select-pane -t "$DAIMYO_ID" -T "daimyo"
+# 大名（ダークネイビー背景）
+tmux select-pane -t "$DAIMYO_ID" -T "daimyo" -P 'bg=colour17'
 tmux send-keys -t "$DAIMYO_ID" "cd '$PROJECT_DIR' && export PS1='(\[\033[1;35m\]大名\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ ' && clear" Enter
 
 # 参謀
