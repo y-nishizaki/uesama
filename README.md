@@ -64,8 +64,7 @@ source ~/.zshrc  # または ~/.bashrc
 ```bash
 cd /your/project
 uesama              # 全エージェント起動
-uesama-daimyo       # 大名セッションに接続
-uesama-agents       # 参謀+家臣セッションに接続
+uesama-session      # セッションに接続
 uesama-stop         # 全セッション終了
 uesama-update       # uesama を最新版に更新
 ```

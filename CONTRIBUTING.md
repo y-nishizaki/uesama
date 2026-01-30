@@ -39,7 +39,7 @@ bash scripts/setup-dev.sh
 
 ```
 uesama/
-├── bin/                        # CLI コマンド（uesama, uesama-daimyo, ...）
+├── bin/                        # CLI コマンド（uesama, uesama-session, ...）
 ├── scripts/
 │   ├── start.sh                # メイン起動スクリプト（tmux + AI エージェント）
 │   ├── setup.sh                # ユーザー向け依存チェック
