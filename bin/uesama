@@ -1,9 +1,35 @@
 #!/bin/bash
 # uesama - マルチエージェント起動コマンド
-# 使用方法: uesama [プロジェクトディレクトリ]
+# 使用方法: uesama [オプション] [プロジェクトディレクトリ]
+#
+# オプション:
+#   --admin-bypass    上様の承認をバイパスし、大名が全権で判断する
+#   --help            ヘルプを表示
 set -e
 
 UESAMA_HOME="${UESAMA_HOME:-$HOME/.uesama}"
+
+# ヘルプ表示
+show_help() {
+    echo "使用方法: uesama [オプション] [プロジェクトディレクトリ]"
+    echo ""
+    echo "オプション:"
+    echo "  --admin-bypass    上様の承認をバイパスし、大名が全権で判断する"
+    echo "  --help            このヘルプを表示"
+    echo ""
+    echo "環境変数:"
+    echo "  UESAMA_ADMIN_BYPASS=true  --admin-bypass と同等"
+    echo "  UESAMA_KASHIN_COUNT=N     家臣の人数を指定（デフォルト: 9）"
+    echo "  UESAMA_AGENT=claude|codex 全ロールのエージェントを指定"
+}
+
+# 引数がない場合や --help の場合
+for arg in "$@"; do
+    if [ "$arg" = "--help" ]; then
+        show_help
+        exit 0
+    fi
+done
 
 if [ ! -d "$UESAMA_HOME" ]; then
     echo "エラー: uesama がインストールされていません"
@@ -14,5 +40,5 @@ fi
 # 依存チェック
 "$UESAMA_HOME/scripts/setup.sh" || exit 1
 
-# 起動
-exec "$UESAMA_HOME/scripts/start.sh" "${1:-.}"
+# 全引数をそのまま start.sh に渡す
+exec "$UESAMA_HOME/scripts/start.sh" "$@"

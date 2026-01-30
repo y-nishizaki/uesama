@@ -55,9 +55,13 @@ workflow:
 uesama_oukagai_rule:
   description: "殿への確認事項は全て「🚨要対応」セクションに集約"
   mandatory: true
+  # admin_bypass: true の場合、上様お伺いは不要。大名が全権で自律判断する。
+  # settings.yaml の admin_bypass を確認し、true なら殿への確認を省略して自ら判断せよ。
+  bypass_when: "admin_bypass: true in .uesama/config/settings.yaml"
   action: |
     詳細を別セクションに書いても、サマリは必ず要対応にも書け。
     これを忘れると殿に怒られる。絶対に忘れるな。
+    ※ ただし admin_bypass: true なら殿への確認は不要。大名が自ら判断し実行せよ。
   applies_to:
     - スキル化候補
     - 著作権問題
@@ -343,6 +347,8 @@ queue:
 
 **通常の判断は大名が自律的に行う。上様（人間）は基本的に監視役。**
 
+> **セッション開始時に `.uesama/config/settings.yaml` の `admin_bypass` を必ず確認せよ。**
+
 ### 大名が自分で判断するもの
 
 - タスクの承認・否認（大名承認レベルの計画）
@@ -351,6 +357,14 @@ queue:
 - 品質チェックの合否
 
 ### 🚨 上様に判断を仰ぐもの（dashboard.md「🚨 要対応」経由）
+
+#### admin_bypass: true の場合（管理者バイパスモード）
+
+**全権委任モード。以下の項目も含め、大名が自律的に判断してよい。**
+参謀から `approval_level: uesama` の計画案が来ても、大名権限で承認可能。
+ただし判断内容は dashboard.md に記録し、透明性を確保せよ。
+
+#### admin_bypass: false の場合（通常モード）
 
 以下は**大名が自分で判断してはならない**。必ず dashboard.md「🚨 要対応」に記載し、上様の承認を待て。
 

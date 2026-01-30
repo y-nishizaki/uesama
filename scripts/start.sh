@@ -4,7 +4,24 @@
 set -e
 
 UESAMA_HOME="${UESAMA_HOME:-$HOME/.uesama}"
-PROJECT_DIR="${1:-.}"
+ADMIN_BYPASS="${UESAMA_ADMIN_BYPASS:-false}"
+
+# オプション解析
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --admin-bypass)
+            ADMIN_BYPASS="true"
+            shift
+            ;;
+        *)
+            POSITIONAL_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+PROJECT_DIR="${POSITIONAL_ARGS[0]:-.}"
 PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
 KASHIN_COUNT="${UESAMA_KASHIN_COUNT:-9}"
 
@@ -139,6 +156,11 @@ show_banner
 echo -e "  \033[1;33m天下布武！陣立てを開始いたす\033[0m"
 echo "  プロジェクト: $PROJECT_DIR"
 echo "  エージェント: $AGENT_DISPLAY_SUMMARY"
+if [ "$ADMIN_BYPASS" = "true" ]; then
+    echo ""
+    echo -e "  \033[1;31m⚠️  管理者バイパスモード: 有効\033[0m"
+    echo -e "  \033[1;31m    上様の承認なしに大名が全権で判断いたす\033[0m"
+fi
 echo ""
 
 # ═══════════════════════════════════════════════
@@ -227,6 +249,12 @@ agent: $DEFAULT_AGENT
 agent_daimyo: $AGENT_DAIMYO
 agent_sanbo: $AGENT_SANBO
 agent_kashin: $AGENT_KASHIN
+
+# 管理者バイパスモード
+# true にすると上様（人間）の承認待ちをスキップし、大名が全権委任で判断する
+# 起動オプション: uesama --admin-bypass
+# 環境変数: UESAMA_ADMIN_BYPASS=true
+admin_bypass: $ADMIN_BYPASS
 
 # ═══════════════════════════════════════════════
 # セキュリティポリシー（エンタープライズ向け）
