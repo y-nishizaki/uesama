@@ -4,7 +4,7 @@
 
 **Claude Code マルチエージェント統率システム**
 
-*コマンド1つで、8体のAIエージェントが並列稼働*
+*コマンド1つで、最大11体のAIエージェントが並列稼働*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
@@ -28,15 +28,15 @@
     │   DAIMYO    │  ← 命令を受け取り、即座に委譲
     │   (大名)    │
     └──────┬──────┘
-           │ YAMLファイル + tmux
+           │ YAMLファイル + tmux send-keys
     ┌──────▼──────┐
-    │    SANBO    │  ← タスクを家臣に分配
+    │    SANBO    │  ← タスクを分解し家臣に分配
     │   (参謀)    │
     └──────┬──────┘
            │
-  ┌─┬─┬─┬─┴─┬─┬─┬─┐
-  │1│2│3│4│5│6│7│8│  ← 8体の家臣が並列実行
-  └─┴─┴─┴─┴─┴─┴─┴─┘
+  ┌─┬─┬─┬─┴─┬─┬─┬─┬─┐
+  │1│2│3│4│5│6│7│8│9│  ← 最大9体の家臣が並列実行
+  └─┴─┴─┴─┴─┴─┴─┴─┴─┘
       KASHIN (家臣)
 ```
 
@@ -52,7 +52,7 @@
 ### インストール
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/y-nishizaki/multi-agent-shogun/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/y-nishizaki/uesama/main/install.sh | sh
 source ~/.zshrc  # または ~/.bashrc
 ```
 
@@ -63,6 +63,8 @@ cd /your/project
 uesama              # 全エージェント起動
 uesama-daimyo       # 大名セッションに接続
 uesama-agents       # 参謀+家臣セッションに接続
+uesama-stop         # 全セッション終了
+uesama-update       # uesama を最新版に更新
 ```
 
 ### アンインストール
@@ -77,8 +79,8 @@ cd uesama
 ## 仕組み
 
 1. `uesama` がプロジェクトに `.uesama/` ディレクトリを作成
-2. tmux セッション2つを起動: `daimyo`（1ペイン）と `kashindan`（9ペイン）
-3. 全10エージェントで Claude Code を起動
+2. tmux セッション `kashindan` を起動（大名+参謀+家臣のペインを配置）
+3. 全エージェントで Claude Code を起動
 4. エージェント間は YAML ファイル + tmux send-keys で通信（イベント駆動、ポーリングなし）
 5. 進捗は `.uesama/dashboard.md` で確認
 
@@ -90,7 +92,21 @@ cd uesama
 |-------------|------|-----|
 | 大名 (Daimyo) | 総大将 — あなたの命令を受け、参謀に委譲 | 1 |
 | 参謀 (Sanbo) | 軍師 — タスクを分解し、家臣に割り当て | 1 |
-| 家臣 (Kashin) | 実働部隊 — タスクを並列実行 | 8 |
+| 家臣 (Kashin) | 実働部隊 — タスクを並列実行 | 9（デフォルト） |
+
+家臣の数は環境変数 `UESAMA_KASHIN_COUNT` で変更できます。
+
+### tmux レイアウト
+
+```
+┌──────────┬──────────┬──────────┬──────────┐
+│          │ kashin1  │ kashin4  │ kashin7  │
+│  大名    ├──────────┼──────────┼──────────┤
+│          │ kashin2  │ kashin5  │ kashin8  │
+├──────────┼──────────┼──────────┼──────────┤
+│  参謀    │ kashin3  │ kashin6  │ kashin9  │
+└──────────┴──────────┴──────────┴──────────┘
+```
 
 ---
 
@@ -102,7 +118,7 @@ cd uesama
 
 ## 主な特徴
 
-- **並列実行**: 最大8タスクを同時実行
+- **並列実行**: 最大9タスクを同時実行
 - **ノンブロッキング**: 命令後すぐ次の命令を出せる
 - **イベント駆動**: ポーリングなしでAPI代金を節約
 - **CLIインストール**: 一度入れればどのプロジェクトでも使える
