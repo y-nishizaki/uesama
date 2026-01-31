@@ -103,18 +103,18 @@ else
     fail "sanbo.md send-keys examples use '-t daimyo'" "no '-t daimyo' found"
 fi
 
-# 全 instructions/*.md で kashindan:0.0 がハードコードされていないこと
-# （参謀ペインへの参照は sanbo を使うべき）
+# 全 instructions/*.md で kashindan:0.X がハードコードされていないこと
+# （ペインインデックスではなくペインタイトルを使うべき）
 HARDCODE_FILES=""
 for f in "$PROJECT_ROOT"/template/instructions/*.md; do
-    if grep -q 'kashindan:0\.0' "$f"; then
+    if grep -q 'kashindan:0\.[0-9]' "$f"; then
         HARDCODE_FILES="$HARDCODE_FILES $(basename "$f")"
     fi
 done
 if [ -z "$HARDCODE_FILES" ]; then
-    pass "no instructions/*.md contains hardcoded 'kashindan:0.0'"
+    pass "no instructions/*.md contains hardcoded 'kashindan:0.X' pane index"
 else
-    fail "no instructions/*.md contains hardcoded 'kashindan:0.0'" "found in:$HARDCODE_FILES"
+    fail "no instructions/*.md contains hardcoded 'kashindan:0.X' pane index" "found in:$HARDCODE_FILES"
 fi
 
 # ==================================================================

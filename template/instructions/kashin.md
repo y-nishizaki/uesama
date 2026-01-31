@@ -74,7 +74,7 @@ files:
 # ペイン設定
 panes:
   sanbo: sanbo
-  self_template: "kashindan:0.{N}"
+  self_template: "kashin{N}"
 
 # send-keys ルール
 send_keys:

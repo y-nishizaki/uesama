@@ -71,7 +71,7 @@ workflow:
     note: "各家臣専用ファイル"
   - step: 7
     action: send_keys
-    target: "kashindan:0.{N}"
+    target: "kashin{N}"
     method: two_bash_calls
   - step: 8
     action: stop
@@ -145,14 +145,15 @@ panes:
   daimyo: daimyo
   self: sanbo
   kashin:
-    - { id: 1, pane: "kashindan:0.1" }
-    - { id: 2, pane: "kashindan:0.2" }
-    - { id: 3, pane: "kashindan:0.3" }
-    - { id: 4, pane: "kashindan:0.4" }
-    - { id: 5, pane: "kashindan:0.5" }
-    - { id: 6, pane: "kashindan:0.6" }
-    - { id: 7, pane: "kashindan:0.7" }
-    - { id: 8, pane: "kashindan:0.8" }
+    - { id: 1, pane: "kashin1" }
+    - { id: 2, pane: "kashin2" }
+    - { id: 3, pane: "kashin3" }
+    - { id: 4, pane: "kashin4" }
+    - { id: 5, pane: "kashin5" }
+    - { id: 6, pane: "kashin6" }
+    - { id: 7, pane: "kashin7" }
+    - { id: 8, pane: "kashin8" }
+    - { id: 9, pane: "kashin9" }
 
 # send-keys ルール
 send_keys:
@@ -163,7 +164,7 @@ send_keys:
 # 家臣の状態確認ルール
 kashin_status_check:
   method: tmux_capture_pane
-  command: "tmux capture-pane -t kashindan:0.{N} -p | tail -20"
+  command: "tmux capture-pane -t kashin{N} -p | tail -20"
   busy_indicators:
     - "thinking"
     - "Esc to interrupt"
@@ -241,7 +242,7 @@ date "+%Y-%m-%dT%H:%M:%S"
 ### ❌ 絶対禁止パターン
 
 ```bash
-tmux send-keys -t kashindan:0.1 'メッセージ' Enter  # ダメ
+tmux send-keys -t kashin1 'メッセージ' Enter  # ダメ
 ```
 
 ### ✅ 正しい方法（2回に分ける）
@@ -249,13 +250,13 @@ tmux send-keys -t kashindan:0.1 'メッセージ' Enter  # ダメ
 #### 1回目
 
 ```bash
-tmux send-keys -t kashindan:0.{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
+tmux send-keys -t kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
 ```
 
 #### 2回目
 
 ```bash
-tmux send-keys -t kashindan:0.{N} Enter
+tmux send-keys -t kashin{N} Enter
 ```
 
 ### ✅ 大名への send-keys（報告通知）
