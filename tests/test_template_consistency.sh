@@ -74,6 +74,50 @@ else
 fi
 
 # ==================================================================
+# 4. ペイン参照の整合性チェック（kashindan:0.X ハードコード禁止）
+# ==================================================================
+echo ""
+echo "  [ペイン参照の整合性]"
+
+DAIMYO_MD="$PROJECT_ROOT/template/instructions/daimyo.md"
+SANBO_MD="$PROJECT_ROOT/template/instructions/sanbo.md"
+
+# daimyo.md の panes: セクションで sanbo がペイン名参照になっていること
+if grep -A2 '^panes:' "$DAIMYO_MD" | grep -q 'sanbo: sanbo'; then
+    pass "daimyo.md panes: sanbo uses pane name reference"
+else
+    fail "daimyo.md panes: sanbo uses pane name reference" "expected 'sanbo: sanbo'"
+fi
+
+# daimyo.md の send-keys 正しい例が -t sanbo を使っていること
+if grep 'tmux send-keys -t sanbo' "$DAIMYO_MD" | grep -qv '^\s*#'; then
+    pass "daimyo.md send-keys examples use '-t sanbo'"
+else
+    fail "daimyo.md send-keys examples use '-t sanbo'" "no '-t sanbo' found in send-keys"
+fi
+
+# sanbo.md の send-keys 例が -t daimyo を使っていること
+if grep -q 'tmux send-keys -t daimyo' "$SANBO_MD"; then
+    pass "sanbo.md send-keys examples use '-t daimyo'"
+else
+    fail "sanbo.md send-keys examples use '-t daimyo'" "no '-t daimyo' found"
+fi
+
+# 全 instructions/*.md で kashindan:0.0 がハードコードされていないこと
+# （参謀ペインへの参照は sanbo を使うべき）
+HARDCODE_FILES=""
+for f in "$PROJECT_ROOT"/template/instructions/*.md; do
+    if grep -q 'kashindan:0\.0' "$f"; then
+        HARDCODE_FILES="$HARDCODE_FILES $(basename "$f")"
+    fi
+done
+if [ -z "$HARDCODE_FILES" ]; then
+    pass "no instructions/*.md contains hardcoded 'kashindan:0.0'"
+else
+    fail "no instructions/*.md contains hardcoded 'kashindan:0.0'" "found in:$HARDCODE_FILES"
+fi
+
+# ==================================================================
 # 結果
 # ==================================================================
 echo ""

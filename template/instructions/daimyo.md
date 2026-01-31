@@ -39,7 +39,7 @@ workflow:
     target: .uesama/queue/daimyo_to_sanbo.yaml
   - step: 3
     action: send_keys
-    target: kashindan:0.0
+    target: sanbo
     method: two_bash_calls
   - step: 4
     action: wait_for_notification
@@ -79,7 +79,7 @@ files:
 
 # ペイン設定
 panes:
-  sanbo: kashindan:0.0
+  sanbo: sanbo
 
 # send-keys ルール
 send_keys:
@@ -91,7 +91,7 @@ send_keys:
 # 参謀の状態確認ルール
 sanbo_status_check:
   method: tmux_capture_pane
-  command: "tmux capture-pane -t kashindan:0.0 -p | tail -20"
+  command: "tmux capture-pane -t sanbo -p | tail -20"
   busy_indicators:
     - "thinking"
     - "Effecting…"
@@ -193,10 +193,10 @@ date "+%Y-%m-%dT%H:%M:%S"
 
 ```bash
 # ダメな例1: 1行で書く
-tmux send-keys -t kashindan:0.0 'メッセージ' Enter
+tmux send-keys -t sanbo 'メッセージ' Enter
 
 # ダメな例2: &&で繋ぐ
-tmux send-keys -t kashindan:0.0 'メッセージ' && tmux send-keys -t kashindan:0.0 Enter
+tmux send-keys -t sanbo 'メッセージ' && tmux send-keys -t sanbo Enter
 ```
 
 ### ✅ 正しい方法（2回に分ける）
@@ -204,13 +204,13 @@ tmux send-keys -t kashindan:0.0 'メッセージ' && tmux send-keys -t kashindan
 #### 1回目 — メッセージを送る
 
 ```bash
-tmux send-keys -t kashindan:0.0 '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
+tmux send-keys -t sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
 ```
 
 #### 2回目 — Enterを送る
 
 ```bash
-tmux send-keys -t kashindan:0.0 Enter
+tmux send-keys -t sanbo Enter
 ```
 
 ## 指示の書き方

@@ -62,7 +62,7 @@ workflow:
     value: done
   - step: 7
     action: send_keys
-    target: kashindan:0.0
+    target: sanbo
     method: two_bash_calls
     mandatory: true
 
@@ -73,7 +73,7 @@ files:
 
 # ペイン設定
 panes:
-  sanbo: kashindan:0.0
+  sanbo: sanbo
   self_template: "kashindan:0.{N}"
 
 # send-keys ルール
@@ -216,7 +216,7 @@ date "+%Y-%m-%dT%H:%M:%S"
 ### ❌ 絶対禁止パターン
 
 ```bash
-tmux send-keys -t kashindan:0.0 'メッセージ' Enter  # ダメ
+tmux send-keys -t sanbo 'メッセージ' Enter  # ダメ
 ```
 
 ### ✅ 正しい方法（2回に分ける）
@@ -224,13 +224,13 @@ tmux send-keys -t kashindan:0.0 'メッセージ' Enter  # ダメ
 #### 1回目
 
 ```bash
-tmux send-keys -t kashindan:0.0 'kashin{N}、任務完了でござる。報告書を確認されよ。'
+tmux send-keys -t sanbo 'kashin{N}、任務完了でござる。報告書を確認されよ。'
 ```
 
 #### 2回目
 
 ```bash
-tmux send-keys -t kashindan:0.0 Enter
+tmux send-keys -t sanbo Enter
 ```
 
 ### ⚠️ 報告送信は義務（省略禁止）

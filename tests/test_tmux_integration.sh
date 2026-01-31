@@ -21,12 +21,10 @@ fail() {
 }
 
 # テスト用セッション名（本番と衝突しない）
-TEST_SESSION_KASHINDAN="test_kashindan_$$"
-TEST_SESSION_DAIMYO="test_daimyo_$$"
+TEST_SESSION="test_kashindan_$$"
 
 cleanup() {
-    tmux kill-session -t "$TEST_SESSION_KASHINDAN" 2>/dev/null || true
-    tmux kill-session -t "$TEST_SESSION_DAIMYO" 2>/dev/null || true
+    tmux kill-session -t "$TEST_SESSION" 2>/dev/null || true
     rm -rf "$TEST_TMPDIR"
 }
 trap cleanup EXIT
@@ -48,72 +46,68 @@ fi
 TEST_TMPDIR=$(mktemp -d)
 
 # ==================================================================
-# 1. tmux セッション作成テスト
+# 1. セッション作成テスト
 # ==================================================================
 echo "  [セッション作成]"
 
-tmux new-session -d -s "$TEST_SESSION_DAIMYO" -c "$TEST_TMPDIR"
-if tmux has-session -t "$TEST_SESSION_DAIMYO" 2>/dev/null; then
-    pass "daimyo session created"
-else
-    fail "daimyo session created" "session not found"
-fi
-
-tmux new-session -d -s "$TEST_SESSION_KASHINDAN" -n "agents" -c "$TEST_TMPDIR"
-if tmux has-session -t "$TEST_SESSION_KASHINDAN" 2>/dev/null; then
+tmux new-session -d -s "$TEST_SESSION" -n "agents" -c "$TEST_TMPDIR"
+if tmux has-session -t "$TEST_SESSION" 2>/dev/null; then
     pass "kashindan session created"
 else
     fail "kashindan session created" "session not found"
 fi
 
 # ==================================================================
-# 2. ペイン分割テスト（start.sh と同じロジック）
+# 2. ペイン分割テスト（start.sh と同じロジック: 大名+参謀+家臣9=11ペイン）
 # ==================================================================
 echo ""
-echo "  [ペイン分割]"
+echo "  [ペイン分割 - start.sh 現行ロジック再現]"
 
-KASHIN_COUNT=8
-TOTAL_PANES=$((KASHIN_COUNT + 1))  # sanbo + kashin = 9
-COLS=3
-ROWS=$(( (TOTAL_PANES + COLS - 1) / COLS ))
+KASHIN_COUNT=9
+TOTAL_PANES=$((KASHIN_COUNT + 2))  # daimyo + sanbo + kashin
 
-# まず列を作る
-for ((c=1; c<COLS && c<TOTAL_PANES; c++)); do
-    tmux split-window -h -t "$TEST_SESSION_KASHINDAN:0"
-done
+# start.sh と同じレイアウト構築:
+# 左列: 大名(上) + 参謀(下)
+# 右3列×3行: 家臣1-9
 
-# 各列を行に分割
-for ((c=0; c<COLS && c<TOTAL_PANES; c++)); do
-    panes_in_col=$ROWS
-    remaining=$((TOTAL_PANES - c * ROWS))
-    if [ $remaining -lt $ROWS ]; then
-        panes_in_col=$remaining
-    fi
-    if [ $panes_in_col -le 0 ]; then
-        break
-    fi
+# 1. セッション作成済み（LEFT_ID = 最初のペイン）
+LEFT_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
 
-    base_pane=$((c * ROWS))
-    tmux select-pane -t "$TEST_SESSION_KASHINDAN:0.$base_pane" 2>/dev/null || true
-    for ((r=1; r<panes_in_col; r++)); do
-        tmux split-window -v -t "$TEST_SESSION_KASHINDAN:0" 2>/dev/null || true
-    done
+# 2. 左右分割: 左25%=大名+参謀列、右75%=家臣エリア
+tmux split-window -h -p 75 -t "$LEFT_ID"
+RIGHT_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+
+# 3. 左列を上下分割: 上67%=大名、下33%=参謀
+tmux split-window -v -p 33 -t "$LEFT_ID"
+SANBO_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+DAIMYO_ID="$LEFT_ID"
+
+# 4. 右エリアを3列に分割
+tmux split-window -h -p 67 -t "$RIGHT_ID"
+COL23_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+tmux split-window -h -p 50 -t "$COL23_ID"
+COL3_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+COL1_ID="$RIGHT_ID"
+COL2_ID="$COL23_ID"
+
+# 5. 各列を3行に分割（家臣×9）
+KASHIN_IDS=()
+for COL_ID in "$COL1_ID" "$COL2_ID" "$COL3_ID"; do
+    KASHIN_IDS+=("$COL_ID")
+    tmux split-window -v -p 67 -t "$COL_ID"
+    MID_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+    KASHIN_IDS+=("$MID_ID")
+    tmux split-window -v -p 50 -t "$MID_ID"
+    BOT_ID=$(tmux display-message -t "$TEST_SESSION:0" -p '#{pane_id}')
+    KASHIN_IDS+=("$BOT_ID")
 done
 
 # ペイン数を検証
-ACTUAL_PANES=$(tmux list-panes -t "$TEST_SESSION_KASHINDAN:0" 2>/dev/null | wc -l)
+ACTUAL_PANES=$(tmux list-panes -t "$TEST_SESSION:0" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$ACTUAL_PANES" -eq "$TOTAL_PANES" ]; then
-    pass "kashindan has $TOTAL_PANES panes (sanbo + ${KASHIN_COUNT} kashin)"
+    pass "kashindan has $TOTAL_PANES panes (daimyo + sanbo + ${KASHIN_COUNT} kashin)"
 else
     fail "kashindan has $TOTAL_PANES panes" "got $ACTUAL_PANES panes"
-fi
-
-# daimyo は 1 ペインのまま
-DAIMYO_PANES=$(tmux list-panes -t "$TEST_SESSION_DAIMYO" 2>/dev/null | wc -l)
-if [ "$DAIMYO_PANES" -eq 1 ]; then
-    pass "daimyo has exactly 1 pane"
-else
-    fail "daimyo has exactly 1 pane" "got $DAIMYO_PANES panes"
 fi
 
 # ==================================================================
@@ -122,54 +116,78 @@ fi
 echo ""
 echo "  [ペインタイトル]"
 
-tmux select-pane -t "$TEST_SESSION_KASHINDAN:0.0" -T "sanbo"
-SANBO_TITLE=$(tmux display-message -t "$TEST_SESSION_KASHINDAN:0.0" -p '#{pane_title}' 2>/dev/null)
-if [ "$SANBO_TITLE" = "sanbo" ]; then
-    pass "pane 0 title is 'sanbo'"
+# 大名
+tmux select-pane -t "$DAIMYO_ID" -T "daimyo"
+DAIMYO_TITLE=$(tmux display-message -t "$DAIMYO_ID" -p '#{pane_title}' 2>/dev/null)
+if [ "$DAIMYO_TITLE" = "daimyo" ]; then
+    pass "daimyo pane title is 'daimyo'"
 else
-    fail "pane 0 title is 'sanbo'" "got '$SANBO_TITLE'"
+    fail "daimyo pane title is 'daimyo'" "got '$DAIMYO_TITLE'"
 fi
 
-for ((i=1; i<=KASHIN_COUNT; i++)); do
-    tmux select-pane -t "$TEST_SESSION_KASHINDAN:0.$i" -T "kashin$i" 2>/dev/null || true
+# 参謀
+tmux select-pane -t "$SANBO_ID" -T "sanbo"
+SANBO_TITLE=$(tmux display-message -t "$SANBO_ID" -p '#{pane_title}' 2>/dev/null)
+if [ "$SANBO_TITLE" = "sanbo" ]; then
+    pass "sanbo pane title is 'sanbo'"
+else
+    fail "sanbo pane title is 'sanbo'" "got '$SANBO_TITLE'"
+fi
+
+# 家臣
+for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+    num=$((i + 1))
+    tmux select-pane -t "${KASHIN_IDS[$i]}" -T "kashin$num" 2>/dev/null || true
 done
 
-KASHIN1_TITLE=$(tmux display-message -t "$TEST_SESSION_KASHINDAN:0.1" -p '#{pane_title}' 2>/dev/null)
+KASHIN1_TITLE=$(tmux display-message -t "${KASHIN_IDS[0]}" -p '#{pane_title}' 2>/dev/null)
 if [ "$KASHIN1_TITLE" = "kashin1" ]; then
-    pass "pane 1 title is 'kashin1'"
+    pass "kashin1 pane title is 'kashin1'"
 else
-    fail "pane 1 title is 'kashin1'" "got '$KASHIN1_TITLE'"
+    fail "kashin1 pane title is 'kashin1'" "got '$KASHIN1_TITLE'"
 fi
 
-KASHIN8_TITLE=$(tmux display-message -t "$TEST_SESSION_KASHINDAN:0.8" -p '#{pane_title}' 2>/dev/null)
-if [ "$KASHIN8_TITLE" = "kashin8" ]; then
-    pass "pane 8 title is 'kashin8'"
+KASHIN9_TITLE=$(tmux display-message -t "${KASHIN_IDS[8]}" -p '#{pane_title}' 2>/dev/null)
+if [ "$KASHIN9_TITLE" = "kashin9" ]; then
+    pass "kashin9 pane title is 'kashin9'"
 else
-    fail "pane 8 title is 'kashin8'" "got '$KASHIN8_TITLE'"
+    fail "kashin9 pane title is 'kashin9'" "got '$KASHIN9_TITLE'"
 fi
 
 # ==================================================================
-# 4. send-keys テスト（コマンド送信が動くか）
+# 4. ペインタイトルによる send-keys テスト
 # ==================================================================
 echo ""
-echo "  [send-keys]"
+echo "  [ペインタイトルによる send-keys]"
 
-tmux send-keys -t "$TEST_SESSION_DAIMYO" "echo UESAMA_TEST_MARKER" Enter
+# -t sanbo でメッセージが正しいペインに届くか
+tmux send-keys -t "$SANBO_ID" "echo SANBO_TITLE_TEST" Enter
 sleep 0.5
-CAPTURED=$(tmux capture-pane -t "$TEST_SESSION_DAIMYO" -p 2>/dev/null)
-if echo "$CAPTURED" | grep -q "UESAMA_TEST_MARKER"; then
-    pass "send-keys delivers command to daimyo"
+CAPTURED_SANBO=$(tmux capture-pane -t "$SANBO_ID" -p 2>/dev/null)
+if echo "$CAPTURED_SANBO" | grep -q "SANBO_TITLE_TEST"; then
+    pass "send-keys to sanbo pane delivers correctly"
 else
-    fail "send-keys delivers command to daimyo" "marker not found in pane"
+    fail "send-keys to sanbo pane delivers correctly" "marker not found"
 fi
 
-tmux send-keys -t "$TEST_SESSION_KASHINDAN:0.0" "echo SANBO_MARKER" Enter
+# -t daimyo でメッセージが正しいペインに届くか
+tmux send-keys -t "$DAIMYO_ID" "echo DAIMYO_TITLE_TEST" Enter
 sleep 0.5
-CAPTURED_SANBO=$(tmux capture-pane -t "$TEST_SESSION_KASHINDAN:0.0" -p 2>/dev/null)
-if echo "$CAPTURED_SANBO" | grep -q "SANBO_MARKER"; then
-    pass "send-keys delivers command to sanbo pane"
+CAPTURED_DAIMYO=$(tmux capture-pane -t "$DAIMYO_ID" -p 2>/dev/null)
+if echo "$CAPTURED_DAIMYO" | grep -q "DAIMYO_TITLE_TEST"; then
+    pass "send-keys to daimyo pane delivers correctly"
 else
-    fail "send-keys delivers command to sanbo pane" "marker not found"
+    fail "send-keys to daimyo pane delivers correctly" "marker not found"
+fi
+
+# 家臣ペインへの送信テスト
+tmux send-keys -t "${KASHIN_IDS[0]}" "echo KASHIN1_TITLE_TEST" Enter
+sleep 0.5
+CAPTURED_K1=$(tmux capture-pane -t "${KASHIN_IDS[0]}" -p 2>/dev/null)
+if echo "$CAPTURED_K1" | grep -q "KASHIN1_TITLE_TEST"; then
+    pass "send-keys to kashin1 pane delivers correctly"
+else
+    fail "send-keys to kashin1 pane delivers correctly" "marker not found"
 fi
 
 # ==================================================================
@@ -280,64 +298,45 @@ done
 echo ""
 echo "  [セッション停止]"
 
-tmux kill-session -t "$TEST_SESSION_DAIMYO" 2>/dev/null
-if ! tmux has-session -t "$TEST_SESSION_DAIMYO" 2>/dev/null; then
-    pass "daimyo session killed successfully"
-else
-    fail "daimyo session killed successfully" "session still exists"
-fi
-
-tmux kill-session -t "$TEST_SESSION_KASHINDAN" 2>/dev/null
-if ! tmux has-session -t "$TEST_SESSION_KASHINDAN" 2>/dev/null; then
+tmux kill-session -t "$TEST_SESSION" 2>/dev/null
+if ! tmux has-session -t "$TEST_SESSION" 2>/dev/null; then
     pass "kashindan session killed successfully"
 else
     fail "kashindan session killed successfully" "session still exists"
 fi
 
 # 既に無いセッションを kill しても失敗しないか
-tmux kill-session -t "$TEST_SESSION_DAIMYO" 2>/dev/null || true
+tmux kill-session -t "$TEST_SESSION" 2>/dev/null || true
 pass "killing non-existent session does not error (with || true)"
 
 # ==================================================================
-# 8. KASHIN_COUNT 変更テスト（3名で検証）
+# 8. KASHIN_COUNT=3 テスト（新ロジック: 大名+参謀+家臣3=5ペイン）
 # ==================================================================
 echo ""
 echo "  [KASHIN_COUNT=3 テスト]"
 
 TEST_SESSION_SMALL="test_small_$$"
 SMALL_COUNT=3
-SMALL_TOTAL=$((SMALL_COUNT + 1))
+SMALL_TOTAL=$((SMALL_COUNT + 2))  # daimyo + sanbo + kashin
 
 tmux new-session -d -s "$TEST_SESSION_SMALL" -n "agents" -c "$TEST_TMPDIR"
 
-COLS=3
-ROWS=$(( (SMALL_TOTAL + COLS - 1) / COLS ))
+# start.sh と同じロジックで構築（家臣3名版）
+S_LEFT_ID=$(tmux display-message -t "$TEST_SESSION_SMALL:0" -p '#{pane_id}')
+tmux split-window -h -p 75 -t "$S_LEFT_ID"
+S_RIGHT_ID=$(tmux display-message -t "$TEST_SESSION_SMALL:0" -p '#{pane_id}')
+tmux split-window -v -p 33 -t "$S_LEFT_ID"
 
-for ((c=1; c<COLS && c<SMALL_TOTAL; c++)); do
-    tmux split-window -h -t "$TEST_SESSION_SMALL:0"
-done
+# 右エリアを3行に分割（家臣3名なので1列×3行）
+tmux split-window -v -p 67 -t "$S_RIGHT_ID"
+S_MID_ID=$(tmux display-message -t "$TEST_SESSION_SMALL:0" -p '#{pane_id}')
+tmux split-window -v -p 50 -t "$S_MID_ID"
 
-for ((c=0; c<COLS && c<SMALL_TOTAL; c++)); do
-    panes_in_col=$ROWS
-    remaining=$((SMALL_TOTAL - c * ROWS))
-    if [ $remaining -lt $ROWS ]; then
-        panes_in_col=$remaining
-    fi
-    if [ $panes_in_col -le 0 ]; then
-        break
-    fi
-    base_pane=$((c * ROWS))
-    tmux select-pane -t "$TEST_SESSION_SMALL:0.$base_pane" 2>/dev/null || true
-    for ((r=1; r<panes_in_col; r++)); do
-        tmux split-window -v -t "$TEST_SESSION_SMALL:0" 2>/dev/null || true
-    done
-done
-
-SMALL_PANES=$(tmux list-panes -t "$TEST_SESSION_SMALL:0" 2>/dev/null | wc -l)
-if [ "$SMALL_PANES" -ge "$SMALL_TOTAL" ]; then
-    pass "KASHIN_COUNT=3: creates >= $SMALL_TOTAL panes (got $SMALL_PANES)"
+SMALL_PANES=$(tmux list-panes -t "$TEST_SESSION_SMALL:0" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$SMALL_PANES" -eq "$SMALL_TOTAL" ]; then
+    pass "KASHIN_COUNT=3: creates $SMALL_TOTAL panes (daimyo + sanbo + 3 kashin)"
 else
-    fail "KASHIN_COUNT=3: creates >= $SMALL_TOTAL panes" "got $SMALL_PANES panes"
+    fail "KASHIN_COUNT=3: creates $SMALL_TOTAL panes" "got $SMALL_PANES panes"
 fi
 
 tmux kill-session -t "$TEST_SESSION_SMALL" 2>/dev/null || true

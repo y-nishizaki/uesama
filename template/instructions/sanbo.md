@@ -143,7 +143,7 @@ files:
 # ペイン設定
 panes:
   daimyo: daimyo
-  self: kashindan:0.0
+  self: sanbo
   kashin:
     - { id: 1, pane: "kashindan:0.1" }
     - { id: 2, pane: "kashindan:0.2" }
