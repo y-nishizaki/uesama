@@ -1,0 +1,56 @@
+#!/bin/bash
+# uesama-send: ペイン名で send-keys を実行するラッパー
+# usage: uesama-send <pane_name> <message_or_Enter>
+#        uesama-send --resolve <pane_name>
+#
+# 例:
+#   uesama-send sanbo 'メッセージ'
+#   uesama-send sanbo Enter
+#   tmux capture-pane -t $(uesama-send --resolve sanbo) -p
+set -e
+
+PROJ_UESAMA="${UESAMA_PROJECT_DIR:-.}/.uesama"
+PANES_FILE="$PROJ_UESAMA/panes.yaml"
+
+# --resolve モード: ペインIDだけ返す
+RESOLVE_ONLY=false
+if [ "$1" = "--resolve" ]; then
+    RESOLVE_ONLY=true
+    shift
+fi
+
+PANE_NAME="$1"
+shift || true
+
+if [ -z "$PANE_NAME" ]; then
+    echo "usage: uesama-send [--resolve] <pane_name> [message_or_Enter]" >&2
+    exit 1
+fi
+
+if [ ! -f "$PANES_FILE" ]; then
+    echo "エラー: $PANES_FILE が見つかりません。uesama を起動してください。" >&2
+    exit 1
+fi
+
+# panes.yaml からペインIDを取得
+PANE_ID=$(grep "^${PANE_NAME}:" "$PANES_FILE" 2>/dev/null | awk '{print $2}')
+
+if [ -z "$PANE_ID" ]; then
+    echo "エラー: ペイン '${PANE_NAME}' が panes.yaml に見つかりません。" >&2
+    echo "利用可能なペイン:" >&2
+    grep -v '^#' "$PANES_FILE" | awk -F: '{print "  " $1}' >&2
+    exit 1
+fi
+
+if [ "$RESOLVE_ONLY" = true ]; then
+    echo "$PANE_ID"
+    exit 0
+fi
+
+# send-keys 実行
+if [ $# -eq 0 ]; then
+    echo "エラー: メッセージまたは Enter を指定してください。" >&2
+    exit 1
+fi
+
+tmux send-keys -t "$PANE_ID" "$@"

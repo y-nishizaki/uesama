@@ -310,7 +310,75 @@ tmux kill-session -t "$TEST_SESSION" 2>/dev/null || true
 pass "killing non-existent session does not error (with || true)"
 
 # ==================================================================
-# 8. KASHIN_COUNT=3 テスト（新ロジック: 大名+参謀+家臣3=5ペイン）
+# 8. uesama-send テスト
+# ==================================================================
+echo ""
+echo "  [uesama-send ヘルパー]"
+
+# panes.yaml を生成してテスト
+TEST_SESSION2="test_send_$$"
+TEST_TMPDIR2=$(mktemp -d)
+tmux new-session -d -s "$TEST_SESSION2" -n "agents" -c "$TEST_TMPDIR2"
+
+SEND_LEFT_ID=$(tmux display-message -t "$TEST_SESSION2:0" -p '#{pane_id}')
+tmux split-window -h -p 50 -t "$SEND_LEFT_ID"
+SEND_RIGHT_ID=$(tmux display-message -t "$TEST_SESSION2:0" -p '#{pane_id}')
+
+# ペインタイトル設定
+tmux select-pane -t "$SEND_LEFT_ID" -T "daimyo"
+tmux select-pane -t "$SEND_RIGHT_ID" -T "sanbo"
+
+# panes.yaml 生成
+SEND_PROJ="$TEST_TMPDIR2/.uesama"
+mkdir -p "$SEND_PROJ"
+cat > "$SEND_PROJ/panes.yaml" << EOF
+daimyo: $SEND_LEFT_ID
+sanbo: $SEND_RIGHT_ID
+EOF
+
+UESAMA_SEND="$PROJECT_ROOT/scripts/uesama-send"
+
+# --resolve テスト
+RESOLVED=$(UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" --resolve sanbo 2>/dev/null)
+if [ "$RESOLVED" = "$SEND_RIGHT_ID" ]; then
+    pass "uesama-send --resolve sanbo returns correct pane ID"
+else
+    fail "uesama-send --resolve sanbo returns correct pane ID" "expected '$SEND_RIGHT_ID', got '$RESOLVED'"
+fi
+
+# send-keys テスト
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo UESAMA_SEND_TEST" 2>/dev/null
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo Enter 2>/dev/null
+sleep 0.5
+CAPTURED_SEND=$(tmux capture-pane -t "$SEND_RIGHT_ID" -p 2>/dev/null)
+if echo "$CAPTURED_SEND" | grep -q "UESAMA_SEND_TEST"; then
+    pass "uesama-send delivers message to correct pane"
+else
+    fail "uesama-send delivers message to correct pane" "marker not found"
+fi
+
+# 存在しないペイン名のエラーテスト
+if ! UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" --resolve nonexistent 2>/dev/null; then
+    pass "uesama-send --resolve fails for unknown pane name"
+else
+    fail "uesama-send --resolve fails for unknown pane name" "should have failed"
+fi
+
+# panes.yaml が存在しない場合のエラーテスト
+EMPTY_TMPDIR=$(mktemp -d)
+mkdir -p "$EMPTY_TMPDIR/.uesama"
+if ! UESAMA_PROJECT_DIR="$EMPTY_TMPDIR" "$UESAMA_SEND" --resolve sanbo 2>/dev/null; then
+    pass "uesama-send fails when panes.yaml missing"
+else
+    fail "uesama-send fails when panes.yaml missing" "should have failed"
+fi
+rm -rf "$EMPTY_TMPDIR"
+
+tmux kill-session -t "$TEST_SESSION2" 2>/dev/null || true
+rm -rf "$TEST_TMPDIR2"
+
+# ==================================================================
+# 9. KASHIN_COUNT=3 テスト（新ロジック: 大名+参謀+家臣3=5ペイン）
 # ==================================================================
 echo ""
 echo "  [KASHIN_COUNT=3 テスト]"

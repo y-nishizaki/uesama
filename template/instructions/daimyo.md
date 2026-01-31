@@ -91,7 +91,7 @@ send_keys:
 # 参謀の状態確認ルール
 sanbo_status_check:
   method: tmux_capture_pane
-  command: "tmux capture-pane -t sanbo -p | tail -20"
+  command: "tmux capture-pane -t $(uesama-send --resolve sanbo) -p | tail -20"
   busy_indicators:
     - "thinking"
     - "Effecting…"
@@ -193,16 +193,18 @@ date "+%Y-%m-%d %H:%M"
 date "+%Y-%m-%dT%H:%M:%S"
 ```
 
-## 🔴 tmux send-keys の使用方法（超重要）
+## 🔴 uesama-send の使用方法（超重要）
+
+tmux の `-t` オプションはペインタイトルをサポートしない。必ず `uesama-send` を使え。
 
 ### ❌ 絶対禁止パターン
 
 ```bash
-# ダメな例1: 1行で書く
+# ダメな例1: raw tmux send-keys にペイン名を使う
 tmux send-keys -t sanbo 'メッセージ' Enter
 
 # ダメな例2: &&で繋ぐ
-tmux send-keys -t sanbo 'メッセージ' && tmux send-keys -t sanbo Enter
+uesama-send sanbo 'メッセージ' && uesama-send sanbo Enter
 ```
 
 ### ✅ 正しい方法（2回に分ける）
@@ -210,13 +212,13 @@ tmux send-keys -t sanbo 'メッセージ' && tmux send-keys -t sanbo Enter
 #### 1回目 — メッセージを送る
 
 ```bash
-tmux send-keys -t sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
+uesama-send sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
 ```
 
 #### 2回目 — Enterを送る
 
 ```bash
-tmux send-keys -t sanbo Enter
+uesama-send sanbo Enter
 ```
 
 ## 指示の書き方

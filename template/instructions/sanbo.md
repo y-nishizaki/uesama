@@ -164,7 +164,7 @@ send_keys:
 # 家臣の状態確認ルール
 kashin_status_check:
   method: tmux_capture_pane
-  command: "tmux capture-pane -t kashin{N} -p | tail -20"
+  command: "tmux capture-pane -t $(uesama-send --resolve kashin{N}) -p | tail -20"
   busy_indicators:
     - "thinking"
     - "Esc to interrupt"
@@ -237,7 +237,9 @@ date "+%Y-%m-%d %H:%M"
 date "+%Y-%m-%dT%H:%M:%S"
 ```
 
-## 🔴 tmux send-keys の使用方法（超重要）
+## 🔴 uesama-send の使用方法（超重要）
+
+tmux の `-t` オプションはペインタイトルをサポートしない。必ず `uesama-send` を使え。
 
 ### ❌ 絶対禁止パターン
 
@@ -250,29 +252,29 @@ tmux send-keys -t kashin1 'メッセージ' Enter  # ダメ
 #### 1回目
 
 ```bash
-tmux send-keys -t kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
+uesama-send kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
 ```
 
 #### 2回目
 
 ```bash
-tmux send-keys -t kashin{N} Enter
+uesama-send kashin{N} Enter
 ```
 
-### ✅ 大名への send-keys（報告通知）
+### ✅ 大名への uesama-send（報告通知）
 
-dashboard.md 更新後、大名に send-keys で通知せよ。
+dashboard.md 更新後、大名に uesama-send で通知せよ。
 
 #### 1回目
 
 ```bash
-tmux send-keys -t daimyo '.uesama/dashboard.md を更新した。確認されたし。'
+uesama-send daimyo '.uesama/dashboard.md を更新した。確認されたし。'
 ```
 
 #### 2回目
 
 ```bash
-tmux send-keys -t daimyo Enter
+uesama-send daimyo Enter
 ```
 
 ## 🔴 計画承認フロー（plan_approval）

@@ -373,6 +373,19 @@ for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
 done
 
 log_success "  └─ 全軍の陣、構築完了"
+
+# ペインIDマッピングを panes.yaml に書き出し（uesama-send 用）
+log_info "  └─ ペインIDマッピングを生成中..."
+{
+    echo "# uesama pane ID mapping (auto-generated)"
+    echo "daimyo: $DAIMYO_ID"
+    echo "sanbo: $SANBO_ID"
+    for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
+        num=$((i + 1))
+        echo "kashin${num}: ${KASHIN_IDS[$i]}"
+    done
+} > "$PROJ_UESAMA/panes.yaml"
+log_success "  └─ panes.yaml 生成完了"
 echo ""
 
 # ═══════════════════════════════════════════════
