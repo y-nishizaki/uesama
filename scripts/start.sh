@@ -423,8 +423,9 @@ AUDIT_DATE=$(date "+%Y-%m-%d_%H%M%S")
 AUDIT_DIR="$PROJ_UESAMA/logs/$AUDIT_DATE"
 mkdir -p "$AUDIT_DIR"
 
-# ANSIエスケープコード除去フィルタ（色・カーソル制御・OSCシーケンス等を除去し、可読テキストのみ残す）
-ANSI_FILTER="perl -pe 's/\e\].*?(?:\x07|\e\\\\)//g; s/\e\[[0-9;]*[a-zA-Z]//g; s/\e\[\?[0-9;]*[a-zA-Z]//g; s/\e\[>[0-9;]*[a-zA-Z]//g; s/\e\[<[a-zA-Z]//g; s/\e[()][0-9A-Z]//g; s/\r//g; s/[^\x20-\x7E\n\t]//g; s/[ \t]+\$//'"
+# 監査ログフィルタスクリプト（別ファイルで管理）
+LOG_FILTER_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/log_filter.pl"
+ANSI_FILTER="perl '${LOG_FILTER_SCRIPT}'"
 
 # 大名
 tmux pipe-pane -t "$DAIMYO_ID" -o "$ANSI_FILTER >> '${AUDIT_DIR}/daimyo.log'"
