@@ -336,7 +336,7 @@ daimyo: $SEND_LEFT_ID
 sanbo: $SEND_RIGHT_ID
 EOF
 
-UESAMA_SEND="$PROJECT_ROOT/scripts/uesama-send"
+UESAMA_SEND="$PROJECT_ROOT/bin/uesama-send"
 
 # --resolve テスト
 RESOLVED=$(UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" --resolve sanbo 2>/dev/null)

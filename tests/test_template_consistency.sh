@@ -148,10 +148,10 @@ else
 fi
 
 # uesama-send スクリプトが存在すること
-if [ -x "$PROJECT_ROOT/scripts/uesama-send" ]; then
-    pass "scripts/uesama-send exists and is executable"
+if [ -x "$PROJECT_ROOT/bin/uesama-send" ]; then
+    pass "bin/uesama-send exists and is executable"
 else
-    fail "scripts/uesama-send exists and is executable" "not found or not executable"
+    fail "bin/uesama-send exists and is executable" "not found or not executable"
 fi
 
 # ==================================================================
