@@ -423,14 +423,17 @@ AUDIT_DATE=$(date "+%Y-%m-%d_%H%M%S")
 AUDIT_DIR="$PROJ_UESAMA/logs/$AUDIT_DATE"
 mkdir -p "$AUDIT_DIR"
 
+# ANSIエスケープコード除去フィルタ（色・カーソル制御・OSCシーケンス等を除去し、可読テキストのみ残す）
+ANSI_FILTER="perl -pe 's/\e\].*?(?:\x07|\e\\\\)//g; s/\e\[[0-9;]*[a-zA-Z]//g; s/\e\[\?[0-9;]*[a-zA-Z]//g; s/\e\[>[0-9;]*[a-zA-Z]//g; s/\e\[<[a-zA-Z]//g; s/\e[()][0-9A-Z]//g; s/\r//g; s/[^\x20-\x7E\n\t]//g; s/[ \t]+\$//'"
+
 # 大名
-tmux pipe-pane -t "$DAIMYO_ID" -o "cat >> '${AUDIT_DIR}/daimyo.log'"
+tmux pipe-pane -t "$DAIMYO_ID" -o "$ANSI_FILTER >> '${AUDIT_DIR}/daimyo.log'"
 # 参謀
-tmux pipe-pane -t "$SANBO_ID" -o "cat >> '${AUDIT_DIR}/sanbo.log'"
+tmux pipe-pane -t "$SANBO_ID" -o "$ANSI_FILTER >> '${AUDIT_DIR}/sanbo.log'"
 # 家臣
 for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
     num=$((i + 1))
-    tmux pipe-pane -t "${KASHIN_IDS[$i]}" -o "cat >> '${AUDIT_DIR}/kashin${num}.log'"
+    tmux pipe-pane -t "${KASHIN_IDS[$i]}" -o "$ANSI_FILTER >> '${AUDIT_DIR}/kashin${num}.log'"
 done
 
 # セッション情報を記録
