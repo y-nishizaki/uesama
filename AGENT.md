@@ -37,7 +37,7 @@ ShellCheck（警告レベル）、`bash -n`構文検証、actionlint、yamllint�
 
 ### 通信フロー
 
-```
+```text
 User → Daimyo → Sanbo → Kashin(1-9) 並列実行
                 Sanbo ← Kashin(報告)
        Daimyo ← Sanbo(ダッシュボード更新)
@@ -56,7 +56,7 @@ User ← Daimyo(結果報告)
 
 ### 実行時に生成されるファイル（.uesama/）
 
-```
+```text
 .uesama/
 ├── config/settings.yaml       # 言語、ワーカー数、エージェント設定
 ├── queue/
@@ -81,7 +81,7 @@ User ← Daimyo(結果報告)
 ## 環境変数
 
 | 変数 | デフォルト | 説明 |
-|------|-----------|------|
+| ------ | ----------- | ------ |
 | `UESAMA_HOME` | `$HOME/.uesama` | インストールディレクトリ |
 | `UESAMA_KASHIN_COUNT` | `9` | ワーカー数 |
 | `UESAMA_AGENT` | `claude` | デフォルトエージェント種別 |

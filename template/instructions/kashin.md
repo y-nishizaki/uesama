@@ -63,7 +63,7 @@ workflow:
   - step: 7
     action: send_keys
     target: sanbo
-    method: two_bash_calls
+    method: single_bash_with_enter_flag
     mandatory: true
 
 # ファイルパス
@@ -78,7 +78,7 @@ panes:
 
 # send-keys ルール
 send_keys:
-  method: two_bash_calls
+  method: single_bash_with_enter_flag
   to_sanbo_allowed: true
   to_daimyo_allowed: false
   to_user_allowed: false
@@ -223,22 +223,21 @@ tmux の `-t` オプションはペインタイトルをサポートしない。
 ### ❌ 絶対禁止パターン
 
 ```bash
-tmux send-keys -t sanbo 'メッセージ' Enter  # ダメ
+# ダメな例1: raw tmux send-keys にペイン名を使う
+tmux send-keys -t sanbo 'メッセージ' Enter
+
+# ダメな例2: 同一応答内で2回のBash呼び出しに分ける（並列実行されEnterが届かない）
+# 1回目: uesama-send sanbo 'メッセージ'
+# 2回目: uesama-send sanbo Enter
 ```
 
-### ✅ 正しい方法（2回に分ける）
-
-#### 1回目
+### ✅ 正しい方法（--enter オプションで1回で送信）
 
 ```bash
-uesama-send sanbo 'kashin{N}、任務完了でござる。報告書を確認されよ。'
+uesama-send sanbo 'kashin{N}、任務完了でござる。報告書を確認されよ。' --enter
 ```
 
-#### 2回目
-
-```bash
-uesama-send sanbo Enter
-```
+`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
 
 ### ⚠️ 報告送信は義務（省略禁止）
 

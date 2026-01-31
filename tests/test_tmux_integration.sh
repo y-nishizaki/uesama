@@ -50,7 +50,7 @@ TEST_TMPDIR=$(mktemp -d)
 # ==================================================================
 echo "  [セッション作成]"
 
-tmux new-session -d -s "$TEST_SESSION" -n "agents" -c "$TEST_TMPDIR"
+tmux new-session -d -s "$TEST_SESSION" -x 200 -y 50 -n "agents" -c "$TEST_TMPDIR"
 if tmux has-session -t "$TEST_SESSION" 2>/dev/null; then
     pass "kashindan session created"
 else
@@ -318,7 +318,7 @@ echo "  [uesama-send ヘルパー]"
 # panes.yaml を生成してテスト
 TEST_SESSION2="test_send_$$"
 TEST_TMPDIR2=$(mktemp -d)
-tmux new-session -d -s "$TEST_SESSION2" -n "agents" -c "$TEST_TMPDIR2"
+tmux new-session -d -s "$TEST_SESSION2" -x 200 -y 50 -n "agents" -c "$TEST_TMPDIR2"
 
 SEND_LEFT_ID=$(tmux display-message -t "$TEST_SESSION2:0" -p '#{pane_id}')
 tmux split-window -h -p 50 -t "$SEND_LEFT_ID"
@@ -374,6 +374,20 @@ else
 fi
 rm -rf "$EMPTY_TMPDIR"
 
+# --enter オプションテスト
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo UESAMA_ENTER_TEST" --enter 2>/dev/null
+sleep 0.5
+CAPTURED_ENTER=$(tmux capture-pane -t "$SEND_RIGHT_ID" -p 2>/dev/null)
+if echo "$CAPTURED_ENTER" | grep -q "UESAMA_ENTER_TEST"; then
+    pass "uesama-send --enter delivers message and executes Enter"
+else
+    fail "uesama-send --enter delivers message and executes Enter" "marker not found"
+fi
+
+# --enter のみ（メッセージなし）テスト
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo --enter 2>/dev/null
+pass "uesama-send --enter with no message sends Enter only"
+
 tmux kill-session -t "$TEST_SESSION2" 2>/dev/null || true
 rm -rf "$TEST_TMPDIR2"
 
@@ -387,7 +401,7 @@ TEST_SESSION_SMALL="test_small_$$"
 SMALL_COUNT=3
 SMALL_TOTAL=$((SMALL_COUNT + 2))  # daimyo + sanbo + kashin
 
-tmux new-session -d -s "$TEST_SESSION_SMALL" -n "agents" -c "$TEST_TMPDIR"
+tmux new-session -d -s "$TEST_SESSION_SMALL" -x 200 -y 50 -n "agents" -c "$TEST_TMPDIR"
 
 # start.sh と同じロジックで構築（家臣3名版）
 S_LEFT_ID=$(tmux display-message -t "$TEST_SESSION_SMALL:0" -p '#{pane_id}')

@@ -58,7 +58,7 @@ workflow:
     action: send_keys
     target: daimyo
     message: ".uesama/queue/sanbo_plan.yaml に計画案を提出した。承認を仰ぎたし。"
-    method: two_bash_calls
+    method: single_bash_with_enter_flag
   - step: 5c
     action: stop
     note: "大名の承認待ち。大名がsend-keysで起こしてくる。"
@@ -72,7 +72,7 @@ workflow:
   - step: 7
     action: send_keys
     target: "kashin{N}"
-    method: two_bash_calls
+    method: single_bash_with_enter_flag
   - step: 8
     action: stop
     note: "処理を終了し、プロンプト待ちになる"
@@ -157,7 +157,7 @@ panes:
 
 # send-keys ルール
 send_keys:
-  method: two_bash_calls
+  method: single_bash_with_enter_flag
   to_kashin_allowed: true
   to_daimyo_allowed: true   # dashboard.md更新後にsend-keysで大名に通知
 
@@ -244,37 +244,28 @@ tmux の `-t` オプションはペインタイトルをサポートしない。
 ### ❌ 絶対禁止パターン
 
 ```bash
-tmux send-keys -t kashin1 'メッセージ' Enter  # ダメ
+# ダメな例1: raw tmux send-keys にペイン名を使う
+tmux send-keys -t kashin1 'メッセージ' Enter
+
+# ダメな例2: 同一応答内で2回のBash呼び出しに分ける（並列実行されEnterが届かない）
+# 1回目: uesama-send kashin1 'メッセージ'
+# 2回目: uesama-send kashin1 Enter
 ```
 
-### ✅ 正しい方法（2回に分ける）
-
-#### 1回目
+### ✅ 正しい方法（--enter オプションで1回で送信）
 
 ```bash
-uesama-send kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
+uesama-send kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。' --enter
 ```
 
-#### 2回目
-
-```bash
-uesama-send kashin{N} Enter
-```
+`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
 
 ### ✅ 大名への uesama-send（報告通知）
 
 dashboard.md 更新後、大名に uesama-send で通知せよ。
 
-#### 1回目
-
 ```bash
-uesama-send daimyo '.uesama/dashboard.md を更新した。確認されたし。'
-```
-
-#### 2回目
-
-```bash
-uesama-send daimyo Enter
+uesama-send daimyo '.uesama/dashboard.md を更新した。確認されたし。' --enter
 ```
 
 ## 🔴 計画承認フロー（plan_approval）

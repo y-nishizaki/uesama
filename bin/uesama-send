@@ -1,11 +1,17 @@
 #!/bin/bash
 # uesama-send: ペイン名で send-keys を実行するラッパー
-# usage: uesama-send <pane_name> <message_or_Enter>
-#        uesama-send --resolve <pane_name>
+# usage: uesama-send <pane_name> <message>          # メッセージ送信 + 自動Enter
+#        uesama-send <pane_name> <message> --no-enter # メッセージ送信のみ（Enter無し）
+#        uesama-send <pane_name> Enter               # Enterキーのみ送信
+#        uesama-send --resolve <pane_name>           # ペインID解決
+#
+# メッセージ送信時はデフォルトで sleep 0.3 後に Enter を送る。
+# 引数が "Enter" 単体の場合は tmux send-keys にそのまま渡す。
 #
 # 例:
-#   uesama-send sanbo 'メッセージ'
-#   uesama-send sanbo Enter
+#   uesama-send sanbo 'メッセージ'              # メッセージ + Enter
+#   uesama-send sanbo 'メッセージ' --no-enter   # メッセージのみ
+#   uesama-send sanbo Enter                     # Enterキーのみ
 #   tmux capture-pane -t $(uesama-send --resolve sanbo) -p
 set -e
 
@@ -47,10 +53,28 @@ if [ "$RESOLVE_ONLY" = true ]; then
     exit 0
 fi
 
+# --enter オプション検出
+SEND_ENTER=false
+ARGS=()
+for arg in "$@"; do
+    if [ "$arg" = "--enter" ]; then
+        SEND_ENTER=true
+    else
+        ARGS+=("$arg")
+    fi
+done
+
 # send-keys 実行
-if [ $# -eq 0 ]; then
+if [ ${#ARGS[@]} -eq 0 ] && [ "$SEND_ENTER" = false ]; then
     echo "エラー: メッセージまたは Enter を指定してください。" >&2
     exit 1
 fi
 
-tmux send-keys -t "$PANE_ID" "$@"
+if [ ${#ARGS[@]} -gt 0 ]; then
+    tmux send-keys -t "$PANE_ID" "${ARGS[@]}"
+fi
+
+if [ "$SEND_ENTER" = true ]; then
+    sleep 0.3
+    tmux send-keys -t "$PANE_ID" Enter
+fi

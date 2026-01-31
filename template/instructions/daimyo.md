@@ -40,7 +40,7 @@ workflow:
   - step: 3
     action: send_keys
     target: sanbo
-    method: two_bash_calls
+    method: single_bash_with_enter_flag
   - step: 4
     action: wait_for_notification
     note: "参謀がsend-keysで起こしてくる。計画承認 or 完了報告の2パターンあり。"
@@ -83,8 +83,8 @@ panes:
 
 # send-keys ルール
 send_keys:
-  method: two_bash_calls
-  reason: "1回のBash呼び出しでEnterが正しく解釈されない"
+  method: single_bash_with_enter_flag
+  reason: "--enter オプションでメッセージ+Enterを1回で送信"
   to_sanbo_allowed: true
   from_sanbo_allowed: true   # 参謀がdashboard.md更新後にsend-keysで通知
 
@@ -205,21 +205,19 @@ tmux send-keys -t sanbo 'メッセージ' Enter
 
 # ダメな例2: &&で繋ぐ
 uesama-send sanbo 'メッセージ' && uesama-send sanbo Enter
+
+# ダメな例3: 同一応答内で2回のBash呼び出しに分ける（並列実行されEnterが届かない）
+# 1回目: uesama-send sanbo 'メッセージ'
+# 2回目: uesama-send sanbo Enter
 ```
 
-### ✅ 正しい方法（2回に分ける）
-
-#### 1回目 — メッセージを送る
+### ✅ 正しい方法（--enter オプションで1回で送信）
 
 ```bash
-uesama-send sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
+uesama-send sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。' --enter
 ```
 
-#### 2回目 — Enterを送る
-
-```bash
-uesama-send sanbo Enter
-```
+`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
 
 ## 指示の書き方
 
