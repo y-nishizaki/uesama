@@ -211,13 +211,13 @@ uesama-send sanbo 'メッセージ' && uesama-send sanbo Enter
 # 2回目: uesama-send sanbo Enter
 ```
 
-### ✅ 正しい方法（--enter オプションで1回で送信）
+### ✅ 正しい方法（1回のBash呼び出しで完結）
 
 ```bash
-uesama-send sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。' --enter
+uesama-send sanbo '.uesama/queue/daimyo_to_sanbo.yaml に新しい指示がある。確認して実行せよ。'
 ```
 
-`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
+メッセージ送信後、自動で sleep 0.3 → Enter が送られる（デフォルト動作）。
 
 ## 指示の書き方
 

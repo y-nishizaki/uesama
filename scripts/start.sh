@@ -462,25 +462,19 @@ done
 
 # 大名に指示書
 log_info "  └─ 大名に指示書を伝達中..."
-tmux send-keys -t "$DAIMYO_ID" ".uesama/instructions/daimyo.md を読んで役割を理解せよ。"
-sleep 0.5
-tmux send-keys -t "$DAIMYO_ID" Enter
+UESAMA_PROJECT_DIR="$PROJECT_DIR" "$UESAMA_HOME/bin/uesama-send" daimyo ".uesama/instructions/daimyo.md を読んで役割を理解せよ。"
 
 # 参謀に指示書
 sleep 2
 log_info "  └─ 参謀に指示書を伝達中..."
-tmux send-keys -t "$SANBO_ID" ".uesama/instructions/sanbo.md を読んで役割を理解せよ。"
-sleep 0.5
-tmux send-keys -t "$SANBO_ID" Enter
+UESAMA_PROJECT_DIR="$PROJECT_DIR" "$UESAMA_HOME/bin/uesama-send" sanbo ".uesama/instructions/sanbo.md を読んで役割を理解せよ。"
 
 # 家臣に指示書
 sleep 2
 log_info "  └─ 家臣に指示書を伝達中..."
 for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
     num=$((i + 1))
-    tmux send-keys -t "${KASHIN_IDS[$i]}" ".uesama/instructions/kashin.md を読んで役割を理解せよ。汝は家臣${num}号である。"
-    sleep 0.3
-    tmux send-keys -t "${KASHIN_IDS[$i]}" Enter
+    UESAMA_PROJECT_DIR="$PROJECT_DIR" "$UESAMA_HOME/bin/uesama-send" "kashin${num}" ".uesama/instructions/kashin.md を読んで役割を理解せよ。汝は家臣${num}号である。"
     sleep 0.5
 done
 

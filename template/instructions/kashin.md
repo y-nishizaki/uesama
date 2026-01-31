@@ -231,13 +231,13 @@ tmux send-keys -t sanbo 'メッセージ' Enter
 # 2回目: uesama-send sanbo Enter
 ```
 
-### ✅ 正しい方法（--enter オプションで1回で送信）
+### ✅ 正しい方法（1回のBash呼び出しで完結）
 
 ```bash
-uesama-send sanbo 'kashin{N}、任務完了でござる。報告書を確認されよ。' --enter
+uesama-send sanbo 'kashin{N}、任務完了でござる。報告書を確認されよ。'
 ```
 
-`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
+メッセージ送信後、自動で sleep 0.3 → Enter が送られる（デフォルト動作）。
 
 ### ⚠️ 報告送信は義務（省略禁止）
 

@@ -53,28 +53,35 @@ if [ "$RESOLVE_ONLY" = true ]; then
     exit 0
 fi
 
-# --enter オプション検出
-SEND_ENTER=false
+# オプション検出
+NO_ENTER=false
 ARGS=()
 for arg in "$@"; do
-    if [ "$arg" = "--enter" ]; then
-        SEND_ENTER=true
+    if [ "$arg" = "--no-enter" ]; then
+        NO_ENTER=true
+    elif [ "$arg" = "--enter" ]; then
+        # 後方互換: --enter は明示的に指定しても動作する（デフォルトと同じ）
+        :
     else
         ARGS+=("$arg")
     fi
 done
 
 # send-keys 実行
-if [ ${#ARGS[@]} -eq 0 ] && [ "$SEND_ENTER" = false ]; then
+if [ ${#ARGS[@]} -eq 0 ]; then
     echo "エラー: メッセージまたは Enter を指定してください。" >&2
     exit 1
 fi
 
-if [ ${#ARGS[@]} -gt 0 ]; then
-    tmux send-keys -t "$PANE_ID" "${ARGS[@]}"
+# 引数が "Enter" 単体の場合はそのまま素通し（Enter2回防止）
+if [ ${#ARGS[@]} -eq 1 ] && [ "${ARGS[0]}" = "Enter" ]; then
+    tmux send-keys -t "$PANE_ID" Enter
+    exit 0
 fi
 
-if [ "$SEND_ENTER" = true ]; then
+tmux send-keys -t "$PANE_ID" "${ARGS[@]}"
+
+if [ "$NO_ENTER" = false ]; then
     sleep 0.3
     tmux send-keys -t "$PANE_ID" Enter
 fi

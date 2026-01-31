@@ -346,15 +346,14 @@ else
     fail "uesama-send --resolve sanbo returns correct pane ID" "expected '$SEND_RIGHT_ID', got '$RESOLVED'"
 fi
 
-# send-keys テスト
+# send-keys テスト（デフォルトで Enter が送られる）
 UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo UESAMA_SEND_TEST" 2>/dev/null
-UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo Enter 2>/dev/null
 sleep 0.5
 CAPTURED_SEND=$(tmux capture-pane -t "$SEND_RIGHT_ID" -p 2>/dev/null)
 if echo "$CAPTURED_SEND" | grep -q "UESAMA_SEND_TEST"; then
-    pass "uesama-send delivers message to correct pane"
+    pass "uesama-send delivers message and auto-sends Enter"
 else
-    fail "uesama-send delivers message to correct pane" "marker not found"
+    fail "uesama-send delivers message and auto-sends Enter" "marker not found"
 fi
 
 # 存在しないペイン名のエラーテスト
@@ -374,19 +373,108 @@ else
 fi
 rm -rf "$EMPTY_TMPDIR"
 
-# --enter オプションテスト
-UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo UESAMA_ENTER_TEST" --enter 2>/dev/null
+# デフォルトEnterでコマンドが実際に実行されたか検証（ファイル生成で確認）
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "touch $TEST_TMPDIR2/auto_enter_proof" 2>/dev/null
 sleep 0.5
-CAPTURED_ENTER=$(tmux capture-pane -t "$SEND_RIGHT_ID" -p 2>/dev/null)
-if echo "$CAPTURED_ENTER" | grep -q "UESAMA_ENTER_TEST"; then
-    pass "uesama-send --enter delivers message and executes Enter"
+if [ -f "$TEST_TMPDIR2/auto_enter_proof" ]; then
+    pass "default auto-Enter actually executes the command"
 else
-    fail "uesama-send --enter delivers message and executes Enter" "marker not found"
+    fail "default auto-Enter actually executes the command" "file not created"
 fi
 
-# --enter のみ（メッセージなし）テスト
-UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo --enter 2>/dev/null
-pass "uesama-send --enter with no message sends Enter only"
+# --no-enter でコマンドが実行されていないことの検証
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "touch $TEST_TMPDIR2/no_enter_proof" --no-enter 2>/dev/null
+sleep 0.5
+if [ ! -f "$TEST_TMPDIR2/no_enter_proof" ]; then
+    pass "--no-enter prevents command execution"
+else
+    fail "--no-enter prevents command execution" "file was created (Enter was sent)"
+fi
+# ペインに残った入力をクリア（Ctrl+C）
+tmux send-keys -t "$SEND_RIGHT_ID" C-c 2>/dev/null
+sleep 0.2
+
+# Enter 単体送信テスト（素通し、二重Enter防止）
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo Enter 2>/dev/null
+pass "uesama-send Enter sends Enter key only"
+
+# --enter 後方互換テスト（明示的 --enter もエラーにならない）
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "touch $TEST_TMPDIR2/enter_compat_proof" --enter 2>/dev/null
+sleep 0.5
+if [ -f "$TEST_TMPDIR2/enter_compat_proof" ]; then
+    pass "--enter backward compatibility executes command"
+else
+    fail "--enter backward compatibility executes command" "file not created"
+fi
+
+# --no-enter と --enter の同時指定（--no-enter が優先）
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "touch $TEST_TMPDIR2/conflict_proof" --enter --no-enter 2>/dev/null
+sleep 0.5
+if [ ! -f "$TEST_TMPDIR2/conflict_proof" ]; then
+    pass "--no-enter takes precedence over --enter"
+else
+    fail "--no-enter takes precedence over --enter" "file was created"
+fi
+tmux send-keys -t "$SEND_RIGHT_ID" C-c 2>/dev/null
+sleep 0.2
+
+# 引数なしのエラー終了テスト
+if ! UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo 2>/dev/null; then
+    pass "uesama-send with no message exits non-zero"
+else
+    fail "uesama-send with no message exits non-zero" "should have failed"
+fi
+
+# ペイン名なしのエラー終了テスト
+if ! UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" 2>/dev/null; then
+    pass "uesama-send with no pane name exits non-zero"
+else
+    fail "uesama-send with no pane name exits non-zero" "should have failed"
+fi
+
+# --resolve daimyo テスト
+RESOLVED_DAIMYO=$(UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" --resolve daimyo 2>/dev/null)
+if [ "$RESOLVED_DAIMYO" = "$SEND_LEFT_ID" ]; then
+    pass "uesama-send --resolve daimyo returns correct pane ID"
+else
+    fail "uesama-send --resolve daimyo returns correct pane ID" "expected '$SEND_LEFT_ID', got '$RESOLVED_DAIMYO'"
+fi
+
+# 日本語メッセージの送信テスト
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo 日本語テスト_MARKER" 2>/dev/null
+sleep 0.5
+CAPTURED_JP=$(tmux capture-pane -t "$SEND_RIGHT_ID" -p 2>/dev/null)
+if echo "$CAPTURED_JP" | grep -q "日本語テスト_MARKER"; then
+    pass "uesama-send delivers Japanese message correctly"
+else
+    fail "uesama-send delivers Japanese message correctly" "marker not found"
+fi
+
+# daimyo ペインへのメッセージ送信テスト
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" daimyo "touch $TEST_TMPDIR2/daimyo_send_proof" 2>/dev/null
+sleep 0.5
+if [ -f "$TEST_TMPDIR2/daimyo_send_proof" ]; then
+    pass "uesama-send delivers to daimyo pane and executes"
+else
+    fail "uesama-send delivers to daimyo pane and executes" "file not created"
+fi
+
+# 終了コード検証: 成功時は0
+UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" sanbo "echo exit_code_test" 2>/dev/null
+EXIT_CODE=$?
+if [ "$EXIT_CODE" -eq 0 ]; then
+    pass "uesama-send exits 0 on success"
+else
+    fail "uesama-send exits 0 on success" "got exit code $EXIT_CODE"
+fi
+sleep 0.3
+
+# 終了コード検証: 存在しないペインは非0
+if UESAMA_PROJECT_DIR="$TEST_TMPDIR2" "$UESAMA_SEND" nonexistent "msg" 2>/dev/null; then
+    fail "uesama-send exits non-zero for unknown pane" "should have failed"
+else
+    pass "uesama-send exits non-zero for unknown pane"
+fi
 
 tmux kill-session -t "$TEST_SESSION2" 2>/dev/null || true
 rm -rf "$TEST_TMPDIR2"

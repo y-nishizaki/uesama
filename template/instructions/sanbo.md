@@ -252,20 +252,20 @@ tmux send-keys -t kashin1 'メッセージ' Enter
 # 2回目: uesama-send kashin1 Enter
 ```
 
-### ✅ 正しい方法（--enter オプションで1回で送信）
+### ✅ 正しい方法（1回のBash呼び出しで完結）
 
 ```bash
-uesama-send kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。' --enter
+uesama-send kashin{N} '.uesama/queue/tasks/kashin{N}.yaml に任務がある。確認して実行せよ。'
 ```
 
-`--enter` を付けると、メッセージ送信後に自動で sleep 0.3 → Enter を送る。
+メッセージ送信後、自動で sleep 0.3 → Enter が送られる（デフォルト動作）。
 
 ### ✅ 大名への uesama-send（報告通知）
 
 dashboard.md 更新後、大名に uesama-send で通知せよ。
 
 ```bash
-uesama-send daimyo '.uesama/dashboard.md を更新した。確認されたし。' --enter
+uesama-send daimyo '.uesama/dashboard.md を更新した。確認されたし。'
 ```
 
 ## 🔴 計画承認フロー（plan_approval）
