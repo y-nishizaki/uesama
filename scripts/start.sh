@@ -415,42 +415,6 @@ log_success "✅ 全軍エージェント起動完了"
 echo ""
 
 # ═══════════════════════════════════════════════
-# STEP 7.5: 監査ログ設定（tmux pipe-pane）
-# ═══════════════════════════════════════════════
-log_info "📝 監査ログを設定中..."
-
-AUDIT_DATE=$(date "+%Y-%m-%d_%H%M%S")
-AUDIT_DIR="$PROJ_UESAMA/logs/$AUDIT_DATE"
-mkdir -p "$AUDIT_DIR"
-
-# 監査ログフィルタスクリプト（別ファイルで管理）
-LOG_FILTER_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/log_filter.pl"
-ANSI_FILTER="perl '${LOG_FILTER_SCRIPT}'"
-
-# 大名
-tmux pipe-pane -t "$DAIMYO_ID" -o "$ANSI_FILTER >> '${AUDIT_DIR}/daimyo.log'"
-# 参謀
-tmux pipe-pane -t "$SANBO_ID" -o "$ANSI_FILTER >> '${AUDIT_DIR}/sanbo.log'"
-# 家臣
-for ((i=0; i<${#KASHIN_IDS[@]} && i<KASHIN_COUNT; i++)); do
-    num=$((i + 1))
-    tmux pipe-pane -t "${KASHIN_IDS[$i]}" -o "$ANSI_FILTER >> '${AUDIT_DIR}/kashin${num}.log'"
-done
-
-# セッション情報を記録
-cat > "${AUDIT_DIR}/session_info.yaml" << EOF
-session_start: "$(date "+%Y-%m-%dT%H:%M:%S")"
-project: "$PROJECT_DIR"
-agent_daimyo: "$AGENT_DAIMYO"
-agent_sanbo: "$AGENT_SANBO"
-agent_kashin: "$AGENT_KASHIN"
-kashin_count: $KASHIN_COUNT
-EOF
-
-log_success "  └─ 監査ログ: .uesama/logs/$AUDIT_DATE/"
-echo ""
-
-# ═══════════════════════════════════════════════
 # STEP 8: 指示書読み込み
 # ═══════════════════════════════════════════════
 log_war "📜 各エージェントに指示書を読み込ませ中..."
